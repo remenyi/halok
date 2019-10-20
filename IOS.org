@@ -1,0 +1,95 @@
+#+TITLE: Jegyzet a Cisco IOS oprendszerhez
+
+* Általános IOS ismeretek
+
+** Konfigurációs szintek
+
+   - User EXEC mode (=>=): csak alapvető parancsok adhatóak ki,
+     pl. státusz lekérdezése.
+
+     \downarrow ~enable~
+
+   - Privileged EXEC mode (=#=): innen érhetőek el a configurációs
+     módok, illetve itt lehet perzisztensé tenni a futó konfigurációt
+
+     \downarrow ~configure terminal~
+
+   - Global Configuration mode (=(config)=): innen érhető el a többi
+     alkonfigurációs szint, pl.: interface (=(config-if)=), line
+     (=(config-li)=), router
+
+** Segítség
+
+   - A =?= megadja az összes lehetséges parancs vagy argumentum
+     értékét. Megkezdett parancsoknál és argumentumoknál is
+     használható
+
+   - A =<TAB>= gomb kiegészíti a parancsot vagy argumentumot a teljes
+     nevére
+
+   - Nem muszáj minden parancs vagy argumentum nevét teljesen kiírni,
+     viszont a leírt rövidítéseknek egyértelműen kell azonosítaniuk a
+     parancsot vagy az argumentumot
+
+* Globális konfiguráció
+
+** Hosztnév beállítás
+Privileged EXEC mode-ban kell kiadni
+#+BEGIN_SRC sh
+hostname <hosztnév>
+#+END_SRC
+
+** Banner üzenet beállítása, ami megjelenik minden belépés előtt
+Privileged EXEC mode-ban kell kiadni 
+#+BEGIN_SRC sh
+banner motd <tetszőleges elválsztó jel> <Üzenet, amiben figyelmeztetjük az
+illetéktelen behatolókat, hogy törvénysértést követnek el>
+<ugyanaz a tetszőleges elválasztójel>
+#+END_SRC
+
+** Default gateway beállítás
+Global config mode-ban kell kiadni
+#+BEGIN_SRC sh
+ip default-gateway <ip-cím>
+#+END_SRC
+
+** Jelenleg futó konfiguráció elmentése
+Privileged EXEC mode-ban kell kiadni.
+#+BEGIN_SRC sh
+copy running_config startup_config
+#+END_SRC
+
+** DNS lookup letiltása
+Privileged EXEC mode-ban kell kiadni
+#+BEGIN_SRC sh
+no ip domain lookup
+#+END_SRC
+
+* Interfészek konfigurálása
+
+** Konzol jelszó beállítás
+Global config modeban kell lenni
+#+BEGIN_SRC sh
+line console 0
+password almafa
+login
+#+END_SRC
+
+** Virtuális terminál jelszó beállítás
+Global config mode-ban kell lenni. A virtuális terminálok száma 0-tól
+15-ig tart
+#+BEGIN_SRC sh
+line vty 0 15
+passwod almafa
+login
+#+END_SRC
+
+** Interfész ip beállítás
+Global config mode-ban kell lenni. A switchen =vlan 1=, a routeteren
+=gigabithethernet= vagy =fatethernet= vagy valami ilyesmi a nevük
+#+BEGIN_SRC sh
+interface <interfésznév>
+ip address <ip cím> <subnet mask pontozott decimális formában>
+[description <rövid leírás interfészről>]
+no shutdown
+#+END_SRC
