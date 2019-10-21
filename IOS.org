@@ -94,6 +94,19 @@ ip address <ip cím> <subnet mask pontozott decimális formában>
 no shutdown
 #+END_SRC
 
+** Interfész ipv6 beállítás
+Global config mode-ban kell lenni. A switchen =vlan 1=, a routeteren
+=gigabithethernet= vagy =fastethernet= vagy valami ilyesmi a nevük
+#+BEGIN_SRC sh
+interface <interfésznév>
+ipv6 address <global ipv6-cím>/<prefix-hossz decimálisan> [eui-64]
+ipv6 address <link-local unicast ipv6-cím>/<prefix-hossz decimálisan> link-local
+[description <rövid leírás interfészről>]
+no shutdown
+#+END_SRC
+Ezek után ki kell adni =Global config mode=-ban az ~IPv6
+unicast-routing~ parancsot az unicast csomagok továbbításához
+
 * Monitorozás és hibakeresés
 
 ** Bejegyzések verifikálása
