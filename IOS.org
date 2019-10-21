@@ -93,3 +93,95 @@ ip address <ip cím> <subnet mask pontozott decimális formában>
 [description <rövid leírás interfészről>]
 no shutdown
 #+END_SRC
+
+* Monitorozás és hibakeresés
+
+** Bejegyzések verifikálása
+Privileged EXEC mode-ban kell kiadni
+#+BEGIN_SRC sh
+show running_congig     # Éppen futó konfiguráció
+show ip interface brief # Interfészek és a hozzájuk tartozó ip-címek
+show ip route           # Routing tábla
+show interfaces         # Interfészek
+show arp                # ARP tábla
+show protocols          # Interfészek állapota
+show version            # IOS verzió és egyebek
+show cdp detail         # CDP protokoll által gyűjtött szomszédok
+#+END_SRC
+
+** Kapcsolatok verifikálása
+Kiadható User EXEC mode-ban is
+#+BEGIN_SRC sh
+ping <ip-cím>
+traceroute <ip-cím>
+#+END_SRC
+
+** Debug információk megjelenítése
+Privileged EXEC mode-ban kell kiadni
+#+BEGIN_SRC sh
+debug <debugging funkciók, pl.: ip, dhcp, stb.>
+undebug <debugging funkciók amiket le akarunk kapcsolni>
+undebug <all>
+#+END_SRC
+A debug információk generálása és megjelenítése működésképtelenné
+tehetik az eszközt!  
+
+A debug információk alap esetben a =console= portra
+kerülnek. Ennek kivédésére a ~debug~ parancs előtt ki kell adni a
+~terminal monitor~ parancsot
+
+* Biztonság
+
+** Privileged EXEC mode-hoz jelszó beállítás
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+enable secret <jelszó>
+#+END_SRC
+
+** A konfigurációs fájlban lévő jelszavak titkosítása
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+service password-encryption
+#+END_SRC
+
+** Jelszavak minimális hosszának a beállítása 
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+security password min-length
+#+END_SRC
+
+** Brute-force támadások kivédése
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+login block_for <másodperc> attempts <próbálkozás> within <másodperc>
+#+END_SRC
+
+** Kapcsolat megszakítása egy adott idő elteltével
+Console, VTY és AUX portokra lehet beállítani. Ennek megfelelő
+mode-ban kell lenni
+#+BEGIN_SRC sh
+exec-timeout <perc>
+#+END_SRC
+
+** SSH
+Először meg kell győződni, hogy van-e a routernek saját domain neve
+#+BEGIN_SRC sh
+ip domain-name <domain-név>
+#+END_SRC
+Ezután SSH-kulcsot kell generálni.
+Ha a ~modulus <...>~ részt nem fogadja el, akkor le kell hagyni
+#+BEGIN_SRC sh
+crypto key generate rsa general-keys modulus <360-2048>
+#+END_SRC
+Ezután el kell menteni egy felhasználót a helyi adatbázisban
+#+BEGIN_SRC sh
+username <felhasználónév> privilege 1 secret <jelszó>
+#+END_SRC
+Végül engedélyeznünk kell az SSH-kapcsolatot a VTY-ken.
+
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+line vty 0 4
+login local
+transport input ssh
+#+SRC_END
