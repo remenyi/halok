@@ -34,13 +34,13 @@
 * Globális konfiguráció
 
 ** Hosztnév beállítás
-Privileged EXEC mode-ban kell kiadni
+Global config mode-ban kell kiadni
 #+BEGIN_SRC sh
 hostname <hosztnév>
 #+END_SRC
 
 ** Banner üzenet beállítása, ami megjelenik minden belépés előtt
-Privileged EXEC mode-ban kell kiadni 
+Global config mode-ban kell kiadni 
 #+BEGIN_SRC sh
 banner motd <tetszőleges elválasztójel> <Üzenet, amiben figyelmeztetjük az
 illetéktelen behatolókat, hogy törvénysértést követnek el>
@@ -133,7 +133,7 @@ kerülnek. Ennek kivédésére a ~debug~ parancs előtt ki kell adni a
 * Biztonság
 
 ** Privileged EXEC mode-hoz jelszó beállítás
-Privileged EXEC mode-ban kell lenni
+Global config mode-ban kell lenni
 #+BEGIN_SRC sh
 enable secret <jelszó>
 #+END_SRC
