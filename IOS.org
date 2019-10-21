@@ -4,19 +4,19 @@
 
 ** Konfigurációs szintek
 
-   - User EXEC mode (=>=): csak alapvető parancsok adhatóak ki,
-     pl. státusz lekérdezése.
+   - *User EXEC mode* (=>=): csak alapvető parancsok adhatóak ki,
+     pl. státusz 
 
-     \downarrow ~enable~
+   - *Privileged EXEC mode* (=#=): User EXEC mode-ból az ~enable~
+     paranccsal érhető el. Innen érhetőek el a configurációs módok,
+     illetve itt lehet perzisztensé tenni a futó konfigurációt
 
-   - Privileged EXEC mode (=#=): innen érhetőek el a configurációs
-     módok, illetve itt lehet perzisztensé tenni a futó konfigurációt
-
-     \downarrow ~configure terminal~
-
-   - Global Configuration mode (=(config)=): innen érhető el a többi
-     alkonfigurációs szint, pl.: interface (=(config-if)=), line
+   - *Global Configuration mode* (=(config)=): Privileged EXEC mode-ból
+     a ~configure terminal~ paranccsal érhető el. Innen érhető el a
+     többi alkonfigurációs szint, pl.: interface (=(config-if)=), line
      (=(config-li)=), router
+     
+   - Az alacsonyabb szintekre mindig az ~exit~ parancsal lehet visszatérni
 
 ** Segítség
 
@@ -93,3 +93,5 @@ ip address <ip cím> <subnet mask pontozott decimális formában>
 [description <rövid leírás interfészről>]
 no shutdown
 #+END_SRC
+* 
+
