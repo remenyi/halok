@@ -8,7 +8,7 @@
      pl. státusz 
 
    - *Privileged EXEC mode* (=#=): User EXEC mode-ból az ~enable~
-     paranccsal érhető el. Innen érhetőek el a configurációs módok,
+     paranccsal érhető el. Innen érhetőek el a konfigurációs módok,
      illetve itt lehet perzisztensé tenni a futó konfigurációt
 
    - *Global Configuration mode* (=(config)=): Privileged EXEC mode-ból
@@ -16,7 +16,7 @@
      többi alkonfigurációs szint, pl.: interface (=(config-if)=), line
      (=(config-li)=), router
      
-   - Az alacsonyabb szintekre mindig az ~exit~ parancsal lehet visszatérni
+   - Az alacsonyabb szintekre mindig az ~exit~ paranccsal lehet visszatérni
 
 ** Segítség
 
@@ -42,7 +42,7 @@ hostname <hosztnév>
 ** Banner üzenet beállítása, ami megjelenik minden belépés előtt
 Privileged EXEC mode-ban kell kiadni 
 #+BEGIN_SRC sh
-banner motd <tetszőleges elválsztó jel> <Üzenet, amiben figyelmeztetjük az
+banner motd <tetszőleges elválasztójel> <Üzenet, amiben figyelmeztetjük az
 illetéktelen behatolókat, hogy törvénysértést követnek el>
 <ugyanaz a tetszőleges elválasztójel>
 #+END_SRC
@@ -68,10 +68,10 @@ no ip domain lookup
 * Interfészek konfigurálása
 
 ** Konzol jelszó beállítás
-Global config modeban kell lenni
+Global config mode-ban kell lenni
 #+BEGIN_SRC sh
 line console 0
-password almafa
+password <jelszó>
 login
 #+END_SRC
 
@@ -80,18 +80,16 @@ Global config mode-ban kell lenni. A virtuális terminálok száma 0-tól
 15-ig tart
 #+BEGIN_SRC sh
 line vty 0 15
-passwod almafa
+passwod <jelszó>
 login
 #+END_SRC
 
 ** Interfész ip beállítás
 Global config mode-ban kell lenni. A switchen =vlan 1=, a routeteren
-=gigabithethernet= vagy =fatethernet= vagy valami ilyesmi a nevük
+=gigabithethernet= vagy =fastethernet= vagy valami ilyesmi a nevük
 #+BEGIN_SRC sh
 interface <interfésznév>
 ip address <ip cím> <subnet mask pontozott decimális formában>
 [description <rövid leírás interfészről>]
 no shutdown
 #+END_SRC
-* 
-
