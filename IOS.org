@@ -31,6 +31,13 @@
      viszont a leírt rövidítéseknek egyértelműen kell azonosítaniuk a
      parancsot vagy az argumentumot
 
+** Korábbi parancsok
+   - fölfelé nyíl vagy C-p: előző parancs
+   - lefelé nyíl vagy C-n: következő parancs
+   - alapból a legutóbbi 10 parancs van eltárolva
+   - ~show history~ paranccsal előhozhatóak Privileged EXEC mode-ban
+   - ~terminal history size <szám>~ paranccsal bővíthető
+
 * Globális konfiguráció
 
 ** Hosztnév beállítás
@@ -104,28 +111,46 @@ ipv6 address <link-local unicast ipv6-cím>/<prefix-hossz decimálisan> link-loc
 [description <rövid leírás interfészről>]
 no shutdown
 #+END_SRC
-Ezek után ki kell adni =Global config mode=-ban az ~IPv6
+Ezek után ki kell adni =Global config mode=-ban az ~Ipv6
 unicast-routing~ parancsot az unicast csomagok továbbításához
+
+** Interfész loopback beállítás
+Global config mode-ban kell lenni. Jól jöhet teszteléshez, vagy
+pl. OSPF protokoll beállításához
+#+BEGIN_SRC sh
+interface loopback <szám>
+ip address <ip cím> <subnet mask pontozott decimális formában>
+[description <rövid leírás interfészről>]
+no shutdown
+#+END_SRC
 
 * Monitorozás és hibakeresés
 
 ** Bejegyzések verifikálása
 Privileged EXEC mode-ban kell kiadni
 #+BEGIN_SRC sh
-show running_congig     # Éppen futó konfiguráció
-show ip interface brief # Interfészek és a hozzájuk tartozó ip-címek
-show ip route           # Routing tábla
-show interfaces         # Interfészek
-show arp                # ARP tábla
-show protocols          # Interfészek állapota
-show version            # IOS verzió és egyebek
-show cdp detail         # CDP protokoll által gyűjtött szomszédok
+show running_congig         # Éppen futó konfiguráció
+show ip[v6] interface brief # Interfészek és a hozzájuk tartozó ip-címek
+show ip[v6] route           # Routing tábla
+show ip[v6] route static    # Routing tábla statikus bejegyzésekkel
+show ipv6 route             # Routing tábla csak ipv6-os bejegyzésekkel
+show interfaces             # Interfészek
+show arp                    # ARP tábla
+show protocols              # Interfészek állapota
+show version                # IOS verzió és egyebek
+show cdp detail             # CDP protokoll által gyűjtött szomszédok
 #+END_SRC
+Lehet pipe-olni (|) is! A lehetséges programok:
+- *section* <blokk>: kiírja az adott blokkot
+- *include* <szöveg>: kiírja a szöveget tartalmazó sorokat
+- *exclude* <szöveg>: kiírja a szöveggel nem tartalmazó sorokat
+- *begin* <szöveg>: kiírja a szöveget tartalmazó sorral kezdve az
+  összes sort
 
 ** Kapcsolatok verifikálása
 Kiadható User EXEC mode-ban is
 #+BEGIN_SRC sh
-ping <ip-cím>
+ping <ip(v6)-cím>
 traceroute <ip-cím>
 #+END_SRC
 
@@ -198,3 +223,13 @@ line vty 0 4
 login local
 transport input ssh
 #+SRC_END
+* Routing
+** Statikus útvonalak beállítása
+Global config mode-ban kell kiadni
+#+BEGIN_SRC sh
+ip route <ip-cím> <pontozott decimális maszk> {next-hop-ip | exit-interface}
+ip route 0.0.0.0 0.0.0.0 {next-hop-ip | exit-interface} #alapértelmezett útvonal esetén
+ipv6 route ::/0 {next-hop-ipv6 | exit-interface} #alapértelmezett útvonal ipv6 esetén
+#+END_SRC
+Végére tehető az adminisztratív távolság, ha Floating Static Route-ot
+konfigurálunk

@@ -1,0 +1,181 @@
+#+TITLE: 2. CCNA szemeszter
+
+* Tartalom
+- routerek és switchek beállítása egy kis hálózatban
+- VLAN konfigurálás
+- Hozzáférések beállítása IPv4 felett
+- DHCPv4 és DHCPv6 konfiguráció és verifikáció
+- NAT konfiguráció IPv4 felett
+- egyéb hálózati konfigurálás, monitorozás, karbantartás
+
+* Routing
+
+** Routerek
+
+*** Alapvető működése
+    1. Az bejövő packet kicsomagolása, hogy hozzáférjen a 3. rétegbeli
+       fej részhez
+    2. Megvizsgálja a cél ip-címet és kiválasztja a legjobb utat a
+       routing táblából
+    3. Ha van út a cél felé, akkor becsomagolja egy másik keretbe, és
+       kiküldi a megfelelő interfészen (a típusa lehet a beérkezett
+       kerettől különböző), ha nincs, akkor eldobja vagy kiküldi a
+       *Last Resort* interfészen (ha fel van konfigurálva)
+
+*** Tárolóeszközök
+    - RAM: futó konfiguráció
+    - ROM: diagnosztikai és bootolási eszközök
+    - Flash: IOS és rendszerfájlok
+    - NVRAM: startup konfig
+
+*** Kapcsolódás
+    - Konzolos:
+      - soros port: ok, ha van a gépnek soros portja, egyébként
+        usb\rightarrow{}RS-232 adapter
+      - USB A port: ez a routeren az USB Mini-B portba megy, driver
+        kell hozzá
+
+*** LED-ek
+    - RJ-45:
+      - bal odali (Speed):
+	- 1 felvillanás + szünet: 10 Mb/s
+	- 2 felvillanás + szünet: 100 Mb/s
+	- 3 felvillanás + szünet: 1000 Mb/s
+      - jobb oldali (Link): ha világít van kapcsolat
+    - A többi nagyjából egyértelmű
+
+*** Csomagtovábbító mechanizmusok
+
+    - *Processzváltás*: minden egyes csomagra processzt vált, majd a
+      processzor kikeresi a routing táblából a cél interfészt
+    - *Gyors átváltás*: egy cache használatával felgyorsítja a
+      továbbküldést
+    - *Cisco Express Forwarding (CEF)*: két chache-t is használ, amik
+      csak a hálózati topológia változásaira frissítődnek, gyorsabb az
+      előzőeknél
+
+*** A legjobb út kiválasztása
+    - *metrikák* alapján történik
+      - egy hálózathoz vezető út számmal mért távolsága
+      - pl.: hopszám, sávszélesség
+    - *routing protokollok* dinamikusan, egy metrika (vagy metrikák)
+      alapján határozzák meg a 'szerintük' legjobb utat, és ez alapján
+      frissítik a routing táblát
+    - *load balancing*: ha több azonos metrikájú útvonal van, akkor
+      egyenlően osztja el a csomagokat (EIGRP protokoll támogatja a
+      nem egyenlő elosztást)
+    - *administrative distance*: a routing táblába történő bejegyzés
+      megbízhatóságát adja meg
+
+      | Bejegyzés forrása  | Adminisztratív távolság |
+      |--------------------+-------------------------|
+      | Direkt kapcsolat   |                       0 |
+      | Statikus bejegyzés |                       1 |
+      | EIGRP summary role |                       5 |
+      | External BGP       |                      20 |
+      | Internal EIGRP     |                      90 |
+      | IGRP               |                     100 |
+      | OSPF               |                     110 |
+      | IS-IS              |                     115 |
+      | RIP                |                     120 |
+      | External EIGRP     |                     170 |
+      | Internal BGP       |                     200 |
+
+*** Routing tábla
+    - Bejegyzések forrása:
+
+      | Betűjel | Jelentés                                      |
+      |---------+-----------------------------------------------|
+      | L       | Egy interfészhez köthető ip-cím               |
+      | C       | Közvetlenül kapcsolódó hálózat                |
+      | S       | Statikus út egy távoli hálózat felé           |
+      | D       | Egy másik routertől tanult, EIGRP protokollal |
+      | O       | Egy másik routertől tanult, OSPF protokollal  |
+      
+    - Egy távoli hálózat bejegyzésének részei:
+
+      | <1> | <2> | [<3>/<4>] | via | <5> | <6> | <7> |
+
+      - 1: bejegyzés forrása
+      - 2: cél hálózat címe és maszkja
+      - 3: adminisztratív távolság
+      - 4: metrika
+      - 5: next-hop ip-cím (nem a kimenő interfész ip-címe!)
+      - 6: mennyi idő telt el az út megtanulása óta
+      - 7: az interfész amelyre továbbít
+    
+    - Egy közvetlenül kapcsolódó hálózat bejegyzésének részei:
+
+      | <1> | <2> is directly connected | <3> |
+
+      - 1: bejegyzés forrása, =C= vagy =L=
+      - 2: cél hálózat címe és maszkja
+      - 3: az interfész amelyre továbbít
+	
+      - IOS 15 előtt az =L= bejegyzések nem kerültek kiírásra az IPv4
+        táblában, de az IPv6 táblában mindig
+
+*** Statikus bejegyzés
+    - fajtái:
+      - statikus útvonal egy adott hálózat felé
+      - alapértelmezett statikus útvonal: egy statikusan kiválasztott
+        interfész vagy next-hop eszköz felé irányítja a
+        csomagokat. Akkor a legjobb, ha a router csak egy másik routerhez
+        csatlakozik
+    - linkek az IOS parancsokhoz (később...)
+
+** Statikus routing
+*** Előnyök és hátrányok
+    |                    | dinamikus routing                              | statikus routing                      |
+    |--------------------+------------------------------------------------+---------------------------------------|
+    | komplexitás        | független a hálózat méretétől                  | a hálózat méretével nő                |
+    | topológia változás | automatikusan adaptál                          | adminisztrátori beavatkozás szükséges |
+    | skálázhatóság      | jól skálázható kis és nagy hálózatokban        | csak kis hálózatokban skálázható jól  |
+    | biztonság          | kevésbé biztonságos                            | biztonságosabb                        |
+    | erőforrásigény     | több CPU-t, memóriát és sávszélességet használ | nincsenek extra költségek             |
+    | kiszámíthatóság    | az aktuális topológiától függ                  | mindig ugyanaz                        |
+
+*** Alkalmazások
+    - kis hálózatoknál jó, ami valószínűleg nem változik nagyon
+    - *stub hálózatoknál*: egy routeren keresztül lehet elérni, az is
+      csak egyetlenegy másik routerhez van kapcsolva
+    - alapértelmezett útvonalválasztásnál, ahol nincsen specifikusabb
+      bejegyzés
+    - backup útvonal létrehozásánál
+
+*** Standard Static Route
+    - ipv4 vagy ipv6-os hálózatok adhatóak meg statikus úton
+
+*** Default Static Route
+    - *Gateway of Last Resort*
+    - a bejegyzés minden ip packettel megegyezik, ha nincs
+      specifikusabb
+    - statikusan vagy dinamikusan megadható
+    - cél hálózat 0.0.0.0/0 vagy ::0/0
+    - *stub routereknél*: csak egyetlenegy másik router a szomszédja
+
+*** Summary Static Route
+    - több cél hálózatot összegez egy hálózatra
+      - ha a több cél hálózat szomszédos a hálózattal
+      - ha a több cél hálózat ugyanazon az interfészen vagy next-hop
+        címen érhetőek el
+
+*** Floating Static Route
+    - backup elsődleges dinamikus vagy statikus útvonalakhoz
+    - nagyobb adminisztrációs távolsággal van konfigurálva
+
+*** Statikus hálózat céljának megadása
+    - a next-hop-ip, az interfész vagy mindekettő megadásával
+    - next-hop-ip esetén először meg kell találnia a hálózathoz
+      tartozó bejegyzést, majd a next-hop-ip-hez tartozó bejegyzést
+    - az interfész megadásával csak egy keresést kell elvégezni
+    - csak az interfész megadásával azonban előfordulhat, hogy több
+      router is van az interfész hálózatán, így nem tudja, hogy melyik
+      felé kell továbbítania
+    - ilyenkor kell mind a kettő módot használni
+    - link-local Ipv6-címeknél muszáj megadni az interfészt is, mivel
+      a link-local címek nincsenek a routing táblában (mivel csak egy
+      hálózaton belül egyediek)
+
+*** Statikus hosztok megadása
+    - 32 vagy 128 bites maszkkal
