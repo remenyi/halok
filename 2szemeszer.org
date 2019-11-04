@@ -179,3 +179,197 @@
 
 *** Statikus hosztok megadása
     - 32 vagy 128 bites maszkkal
+
+** TODO Dinamikus routing
+
+** Switchek
+
+*** Borderless Switched Network
+    - Hálózati architektúra
+    - Cisco marketing cucc
+    - Pl.: egy nagy kampusz hálózat + két kis kampusz hálózat
+    - Fő jellemzői:
+      - Hierarchikus: az eszközök rétegekbe szervezhetőek
+      - Moduláris: jól bővíthető
+      - Reziliens: mindig rendelkezésre áll
+      - Flexibilis: intelligensen osztja el a hálózati terhelést
+    - Rétegek:
+      - *Access Layer*: 
+	- A hálózat széle (*edge*), hozzáférést biztosít a
+          felhasználóknak a hálózathoz.
+	- Újabban intelligens eszközöket tesznek ide
+      - *Distribution Layer*:
+	- Access és Core Layer között
+	- Az Access Layer beli eszközök elérik egymást
+	- Utat nyit a Core Layer felé
+	- Redundáns és egyenlő költségű utakat biztosít
+      - *Core Layer*
+	- Az Distribution Layer beli eszközöket köti össze
+	- Pl. kampuszoknál érdemes a kiterjesztett csillag topológiát
+          alkalmazni, ahol a Core Layer van középen
+	- Kisebb kampuszokon összevonható a Distribution Layer-rel
+
+*** Switch típusok
+    - Fixen konfigurált switchek: nem bővíthető
+    - Moduláris switchek: kártyákkal bővíthetőek a
+      portok száma
+    - Egymásra rakható (stackelhető) switchek: egy speciális nagy
+      sávszélességű kébellel vannak összekötve, így úgy viselkednek,
+      mint egy nagy switch
+
+*** Switching tábla
+    - Switching tábla alapján dönti el melyik portra továbbítja a
+      keretet
+    - Switching tábla kitöltése:
+      1. Ha egy bejövő keret forrás címe nincs a táblában, akkor
+         hozzáadja
+      2. Ha létezik, akkor frissíti az időzítőt a bejegyzéshez (ami
+         alap esetben kb. 5 perc)
+      3. Ha a cél cím nincs a táblában, akkor kiküldi minden porton,
+         kivéve azt a portot, ahonnan érkezett
+      4. A cél cím akkor kerül a táblába, ha a cél eszköz visszaküld
+         egy üzenetet
+*** Továbbítás típusai:
+    - *Store-and-forward*:
+      - Megvárja, amíg a keret összes része megérkezett
+      - Ellenőrzést végez, eldobja a helytelen kereteket
+      - Egy porthoz rendelhető bufferben tárolja a keretet
+      - Eltérő sebességű portok között muszáj ezt használni
+      - Alapértelmezetten ez a beállítás működik a Cisco switchekben
+    - *Cut-through*:
+      - Azonnal továbbítja, amint a cél cím kiolvasható, nem várja meg
+        a keret többi részét
+      - A keret további részeit is meg tudja nézni, ami alapján
+        további döntéseket hozhat a keret sorsáról
+      - Sok hibás keret rossz hatással lehet a hálózat teljesítményére
+      - *Fragment free switching*: megnézi az első 64 bájtot, mivel
+        itt fordul elő a legtöbb hiba
+      - Nagyteljesítményű számításoknál használják, ahol a processzek
+        között max 10 ms lehet
+*** Switching domainek
+    - *Collision Domain*:
+      - A hálózatnak azon részei, ahol a keretek összeütközhetnek az
+        osztott médium miatt
+      - Pl.: huboknál (a bejövő keretet minden portjára továbbítja) és
+	half duplex kapcsolatoknál
+      - Full duplex kapcsolatoknál nincs collision domain
+    - *Broadcast Domain*
+      - A hálózat azon részei, ahol a layer 2-es broadcast üzenetek
+        elérnek
+      - Minden különálló switch (nincs összekapcsolva más switchel) a
+        saját bradcast domainjét alkotja
+      - A routerek szegmentálják ezeket a domaineket (a collision
+        domaineket is)
+      - 
+*** Switch boot
+    - POST (Power On Self Test) program betöltése a ROM-ból
+    - Boot loader szoftver betöltése a ROM-ból
+    - A boot loader inicializálja a CPU regisztereket, meghatározza a
+      memória méretét és sebességét (???)
+    - A boot loader inicializálja a flash meghajtón lévő fájlrendszert
+    - A boot loader betölti az IOS-t a memóriába, és átadja a
+      vezérlést az IOS-nek
+    - A boot loader a BOOT környezeti változó alapján tölti be az IOS-t
+    - Ha a BOOT üres, akkor rekurzívan megkeresi (mélységi) az első
+      futtatható bináris fájlt
+
+*** Helyreállítás összeomlás után
+    - Összeomlás után a konzol porton lehet elérni a boot loadert
+    - A konzol porthoz való csatlakozás után ki kell kapcsolni a
+      switchet
+    - Bekapcsolás után a /Mode/ gombot kell nyomkodni, amíg a System
+      led villogás helyett sárga majd zöld nem lesz
+    - A boot loaderben formázni lehet a flash tárhelyet, és
+      újrainstallálni az IOS-t, vagy helyreállítani egy elvesztett
+      jelszót
+
+*** LED-ek
+    - A ledek között a MODE gombbal lehet váltani
+    - *System LED*: 
+      - Van-e áram
+      - Ha zöld, akkor jól üzemel
+      - Ha sárga, akkor nem (pl.: helyreállítás)
+    - *Redundant Power System (RPS) LED*:
+      - Az RPS állapotáról ad infót
+      - Ha zöld akkor, készenlétben van
+      - Ha villog, akkor egy másik egység számára biztosít áramot
+      - Ha sárga, akkor hibás
+      - Ha sárgán villog, akkor csak az RPS látja el árammal a switchet
+    - *Port Status LED*:
+      - Ha ez van kiválasztva, akkor a portokon lévő jelek jelentése a
+        következő:
+      - Ha zöld akkor van kapcsolat
+      - Ha zölden villog akkor érkeznek adatok
+      - Ha zölden és sárgán villog akkor linkhiba van
+      - Ha sárga vagy sárgán villog akkor direkt van lekapcsolva, hogy
+        ne legyen hurok a forwarding domainben (???)
+    - *Port Duplex LED*:
+      - Ha ez van kiválasztva, akkor a portokon lévő zölden égő LED-ek
+        a full-duplex üzemmódot jelentik
+      - A nem égő ledek a half-duplexet
+    - *Port Speed LED*:
+      - Ha ez van kiválasztva, akkor a portokon lévő ledek a link
+        sebességét jelzik
+      - Kikapcsolt led 10 Mb/s
+      - Zöld led 100 Mb/s
+      - Zölden villogó led 1000 Mb/s
+    - *Power over Ethernet (PoE) LED*:
+      - Ha nem világít, akkor nincsen PoE
+      - Ha sárgán villog, akkor nincsen PoE módban, de legalább egy
+        porton nincsen engedélyezve az áramfelvétel, vagy PoE hibás
+      - Ha zöld, akkor a portokon lévő ledek a következőek lehetnek:
+	- Ha nem világít, akkor a PoE ki van kapcsolva
+	- Ha zöld, akkor van PoE
+	- Ha zöld és sárga között váltakozik, akkor a switchnek
+          nincsen elég kapacitása az áramot nyújtani
+	- Ha sárgán villog, akkor PoE hiba történt
+	- Ha sárga, akkor a PoE le van tiltva
+
+*** Hibakeresés
+    - ~show interfaces <interfész>~ parancs kiadásával az ~<interfész> is up~ a
+      fizikai rétegről ad információt, a ~line protocol is up~ az adat
+      rétegről ad információt
+     | Interfész státusz     | Line protokoll státusz | Link állapot   |
+     |-----------------------+------------------------+----------------|
+     | Up                    | Up                     | Ok             |
+     | Down                  | Down                   | Interfész hiba |
+     | Administratively down | Down                   | Down           |
+    - Egyéb hibák, amik nem okoznak leállást, de a működést negatívan
+      befolyásolhatják:
+      - *Runt Frames*: olyan ethernet keretek, amelyek kisebbek a
+        megengedettnél (64 bájt)
+      - *Giants*: olyan ethernet keretek, amelyek nagyobbak a
+        megengedettnél
+      - *CRC hibák*: az ellenőrzés nem sikerül, nagy interferencia
+        okozhatja
+      - *Ütközések*: csak half-duplexeknél fordulhat elő
+      - *Késői ütközések*: olyan ütközések, amelyek 512 bit elküldése
+        után jelentkeznek. Hosszú kábelek vagy rosszul konfigurált
+        duplexitás lehet az oka
+*** Biztonság
+    - Nem használt portok letiltása, az ~interface range <típus>
+      <modul>/<első>-<utolsó>~ parancs megkönnyíti
+    - Biztonságos MAC-cím(ek) számát lehet engedélyezni egy portra
+    - Biztonságos MAC-cím lehet:
+      - Statikus: manuálisan vannak beállítva egy portra
+      - Dinamikus:
+	- A switch dinamikusan tanulja
+	- Csak a switch táblában van benne
+      - Ragadós:
+	- A futó konfigban is el van tárolva
+	- A futó konfigból el lesz távolítva, ha a biztonság ki van
+          kapcsolva a portra
+	- Kikapcsolásnál elveszik, de el lehet menteni a startup
+          konfigba
+	- A ragadós tanulás kikapcsolásával dinamikusak lesznek
+    - Biztonság megsértéséből adódó üzemmód lehet:
+      - Protect: ha a megengedettnél több MAC-cím bejegyzés tartozna
+        egy porthoz, akkor az ismeretlen forrású kereteket eldobja
+      - Restricted: ugyanaz, de itt van syslog jelzés
+      - Shutdown: ugyanaz, de az interfész elérhetetlenné válik, a ~no
+        shutdown~ paranccsal visszahozható
+    - Alapból a biztonság ki van kapcsolva
+    - Ha a biztonság be van kapcsolva, akkor max 1 darab biztonságos
+      MAC-cím lehet shutdown üzemmódban, és a ragadós címtanulás ki van
+      kapcsolva
+* TODO Vlan

@@ -72,6 +72,13 @@ Privileged EXEC mode-ban kell kiadni
 no ip domain lookup
 #+END_SRC
 
+** BOOT környezeti változó beállítása
+A BOOT környezeti változó beállításával adható meg a boot loader
+számára, hogy hol keresse meg az IOS-t a flash tárolón
+#+BEGIN_SRC sh
+boot system flash:<IOS bináris>
+#+END_SRC
+
 * Interfészek konfigurálása
 
 ** Konzol jelszó beállítás
@@ -124,6 +131,26 @@ ip address <ip cím> <subnet mask pontozott decimális formában>
 no shutdown
 #+END_SRC
 
+** Duplexitás és sebesség beállítása
+Global config mode-ban kell lenni. A switch általában automatikusan a
+legjobbat választja
+#+BEGIN_SRC sh
+interface <interfésznév>
+duplex <full|half|auto>
+speed <10|100|1000|auto> #1000 Mb/s módot csak full-duplexben tudják
+end
+#+END_SRC
+
+** Auto-MDIX
+Global config mode-ban kell kiadni. A beállításával mindegy, hogy
+milyen kábelt használunk (crossover vagy straight-through)
+#+BEGIN_SRC sh
+interface <interfész>
+mdix auto
+end
+#+END_SRC
+A sebességnek és a duplexitásnak is auto-nak kell lenniük
+
 * Monitorozás és hibakeresés
 
 ** Bejegyzések verifikálása
@@ -134,7 +161,7 @@ show ip[v6] interface brief # Interfészek és a hozzájuk tartozó ip-címek
 show ip[v6] route           # Routing tábla
 show ip[v6] route static    # Routing tábla statikus bejegyzésekkel
 show ipv6 route             # Routing tábla csak ipv6-os bejegyzésekkel
-show interfaces             # Interfészek
+show interfaces [<intrf>]   # Interfészek
 show arp                    # ARP tábla
 show protocols              # Interfészek állapota
 show version                # IOS verzió és egyebek
@@ -202,7 +229,11 @@ exec-timeout <perc>
 #+END_SRC
 
 ** SSH
-Először meg kell győződni, hogy van-e a routernek saját domain neve
+Először meg kell nézni, hogy az eszköz támogatja-e az ssh-t
+#+BEGIN_SRC sh
+show ip ssh
+#+END_SRC
+Ezután be kell állítani egy saját domain nevet
 #+BEGIN_SRC sh
 ip domain-name <domain-név>
 #+END_SRC
@@ -215,15 +246,30 @@ Ezután el kell menteni egy felhasználót a helyi adatbázisban
 #+BEGIN_SRC sh
 username <felhasználónév> privilege 1 secret <jelszó>
 #+END_SRC
-Végül engedélyeznünk kell az SSH-kapcsolatot a VTY-ken.
+Végül engedélyeznünk kell az SSH-kapcsolatot a VTY-ken
 
 Global config mode-ban kell lenni
 #+BEGIN_SRC sh
 line vty 0 4
-login local
 transport input ssh
+login local
 #+SRC_END
+
+** Port biztonság
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfész>
+switchport mode access
+switchport port-security [maximum <engedélyezett MAC-címek száma> | mac-address sticky]
+#+END_SRC
+Verifikálni a következő parancsokkal lehet
+#+BEGIN_SRC sh
+show port-security interface <interfész>
+show port-security address   # Kiírja az összes biztonságos MAC-címet
+#+END_SRC
+
 * Routing
+
 ** Statikus útvonalak beállítása
 Global config mode-ban kell kiadni
 #+BEGIN_SRC sh
