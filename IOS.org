@@ -279,3 +279,59 @@ ipv6 route ::/0 {next-hop-ipv6 | exit-interface} #alapértelmezett útvonal ipv6
 #+END_SRC
 Végére tehető az adminisztratív távolság, ha Floating Static Route-ot
 konfigurálunk
+
+* Tűzfalak
+** ACL létrehozása, törlése és megjelenítése
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+access-list <0-99 | 1300-1999> {deny | premit | remark} <forrás ip> [<forrás wildcard>] [log]
+no access-list <0-99 | 1300-1999>
+exit
+#+END_SRC
+Minden ACL hozzá van rendelve egy 0-99 vagy 1300-1999 közötti számhoz.
+
+** ACL hozzáadása és eltávolítása interfészről
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfésznév>
+ip access-group {<ACL-szám | ACL-név>} {in | out}
+no ip access-group
+#+END_SRC
+
+** ACL elnevezése
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ip access-list {standard | extended} <név>
+# itt standard named ACL mode-ba kerülünk
+{permit | deny | remark} <forrás ip> [<forrás wildcard>] [log]
+end
+#+END_SRC
+
+** ACL megváltoztatása
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show access-list <ACL-szám> # Itt kilistázza a szabályokat a szekvenciaszámmal együtt
+conf t
+ip access-list standard <ACL-szám>
+no <szekvenciaszám>
+end
+#+END_SRC
+
+** ACL verifikálása
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show access-lists
+clear access-list counters # Lenulláza a bejegyzésekhez tartozó számlálót
+#+END_SRC
+
+** ACL VTY-n
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+line vty 0 4
+login local
+transport input ssh
+access-class <ACL-szám> {in | out}
+exit
+access-list <ACL-szám> permit <forrás ip> <forrás wildcard>
+access-list <ACL-szám> deny any
+#+END_SRC

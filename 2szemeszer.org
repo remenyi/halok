@@ -373,3 +373,52 @@
       MAC-cím lehet shutdown üzemmódban, és a ragadós címtanulás ki van
       kapcsolva
 * TODO Vlan
+* Access Control Lists (ACLs)
+** Feladatai
+- Adatforgalom szűrése (pl. videó, telnet, stb...)
+- Routing információk visszatartása
+- Hozzáférés szabályozása egy hálózathoz
+- Adatforgalom megfigyelése
+- Prioritás megadása
+** Access Control Entries (ACEs)
+- Elutasító (*deny*) vagy engedélyező (*permit*) kijelentések listája
+- Egy ACL-t alkotnak
+- A router egy porthoz rendelt ACE-eken végigmegy, és a kijelentések
+  alapján szűr (*filtering*)
+- A szűrés a 3. és 4. layeren történhet
+- Minden ACL végén van egy elutasító ACE
+** ACL típusok
+- *Inbound ACLs*: bejövő packetekre előbb szűrünk, csak ezután van
+  routing
+- *Outbound ACLs*: a bejövő packeteket routingoljuk, csak ezután
+  szűrünk
+- Semelyik router forrású packetre sincs szűrés
+** Wildcard masking
+- Egy 32 bites digit, ami kijelöli az összehasonlítani kívánt biteket
+- Hasonló az ip maszkokhoz, *csak fordítva...*
+- 0-ás: vizsgálja meg a bithez tartozó címbitet
+- 1-es: ne vizsgálja meg a bithez tartozó címbitet
+- NAND kapcsolat
+- Speciális kulcsszavak:
+  - *host*: csak a hosztot engedélyezi (0.0.0.0)
+  - *any*: mindent engedélyez (255.255.255.255)
+** Szabályok
+- Csak egy protokollra...
+- Csak egy irányba...
+- Csak egy interfészre...
+- lehet létrehozni ACL-t
+** Elhelyezés
+- *Extended ACLs*: minél közelebb a forráshoz, így nem kerülnek nem
+  kívánt csomagok a nagyobb hálózatba
+- *Standard ACLs*: minél közelebb a célhoz, így a többi hálózathoz is
+  eljuthatnak a csomagok
+** ACE-k sorrendje
+- Egy subnetre vonatkozó deny bejegyzés után nem rakhatunk egy permit
+  bejegyzést ugyanabban a hatótávolságban, de fordítva ok
+- Egyébként az IOS szól
+- A bejegyzések csak részben a megadás sorrendjében vannak eltárolva és
+  processzálva
+- A szekvenciaszám a megadás sorrendjét mutatja
+- A host bejegyzések vannak előbb, de nem feltétlenül a megadás
+  sorrendjében (hatékonyság)
+- Az intervallum bejegyzések következnek utána, a megadás sorrendjében
