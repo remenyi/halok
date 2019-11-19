@@ -335,3 +335,97 @@ exit
 access-list <ACL-szám> permit <forrás ip> <forrás wildcard>
 access-list <ACL-szám> deny any
 #+END_SRC
+
+* DHCP
+** DHCP beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ip dhcp pool <név>
+# dhcp pool mode-ba kerülünk
+network <hálózat ip> <hálózat maszk vagy \prefix>
+default-router <gateway ip...>
+dns-server <dns ip>
+domain-name <név>
+lease {<napok> [órák] [percek] | infinite}
+netbios-name-server <ip>
+#+END_SRC
+
+** DHCP verifikálás
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show running-config | section dhcp
+show ip dhcp binding
+show ip dhcp server statistics
+#+END_SRC
+
+** DHCP Relay Agent beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfész>
+ip helper-address <ip-cím>
+end
+#+END_SRC
+
+** DHCP kliens beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfész>
+ip address dhcp
+no shutdown
+end
+#+END_SRC
+
+
+* DHCPv6
+** Stateless server beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ipv6 unicast-routing
+ipv6 dhcp pool <név>
+# dhcp pool mode-ba kerülünk
+dns-server <dns ip>
+domain-name <név>
+exit
+interface <név>
+ipv6 dhcp server <pool név>
+ipv6 nd other-config-flag
+#+END_SRC
+
+** Stateless DHCPv6 kliens beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <név>
+ipv6 enable
+ipv6 address autoconfig
+#+END_SRC
+
+** Stateful server beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ipv6 unicast-routing
+ipv6 dhcp pool <név>
+# dhcp pool mode-ba kerülünk
+address prefix <prefix\hossz>
+dns-server <dns ip>
+domain-name <név>
+exit
+interface <név>
+ipv6 dhcp server <pool név>
+ipv6 nd managed-config-flag
+#+END_SRC
+
+** Stateful kliens beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <név>
+ipv6 enable
+ipv6 address dhcp
+#+END_SRC
+
+** Relay Agent beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <név>
+ipv6 dhcp relay destination <ipv6-cím>
+end
+#+END_SRC
