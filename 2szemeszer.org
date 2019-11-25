@@ -422,3 +422,145 @@
 - A host bejegyzések vannak előbb, de nem feltétlenül a megadás
   sorrendjében (hatékonyság)
 - Az intervallum bejegyzések következnek utána, a megadás sorrendjében
+* TODO DHCP
+
+* NAT
+
+** A NAT
+   - Egy belső hálózaton lévő eszközök ip címét lefordítja a külső
+     hálózaton lévő egyedi címre
+
+** Előnyök
+   - Mérsékli a szűkös ipv4 címek kimerülését
+   - Biztonságosabb, mivel elrejti a privát címeket, és állapotalapú
+     szűrést végez (pl. nem várt TCP szegmenseket eldobja)
+   - Flexibilisebb a publikus hálózathoz való csatlakozásban
+     (pl. load-balancing)
+   - Konzisztencia fenntartása (pl. ha új külső címeket akarunk, mert
+     ISP-t váltottunk, de nem akarjuk megváltoztatni a privát címeket)
+
+** Hátrányok
+   - Lassabb: az első packet midig process-switched, meg kell
+     változtatni a packet headert, és valószínűleg a TCP vagy UDP
+     headert + a checksumokat
+   - Végpont-végpont címek elvesztése, ami a biztonsági protokolloknál
+     gondot okozhat
+
+** Terminológia
+   - Inside address: egy forrás eszköz címe (lokális vagy globális), amelyet a NAT lefordít
+   - Outside address: a cél eszköz címe (lokális vagy globális)
+   - Local address: belső hálózaton lévő címek
+   - Global address: külső hálózaton lévő címek
+   - *Inside local address*: egy forrás eszköz címe a belső hálózaton
+   - *Inside global address*: egy forrás eszköz címe a külső
+     hálózaton, vagyis az a cím, amit a NAT lefordított
+   - *Outside global address*: a cél eszköz címe a külső hálózaton
+   - *Outside local address*: a cél eszköz címe a belső hálózaton
+     (általában ugyanaz mint az outside global address)
+
+** NAT típusok
+   - *Statikus NAT*:
+     - Egy-egy leképezés a címek között
+     - Hálózati adminisztrátor állítja be
+     - Webszervereknél használják
+   - *Dinamikus NAT*: 
+     - Több-több leképezés
+     - A rendelkezésre álló címekből választ inside global address-t
+     - Ezért nem hatékony, ha pl. 100 hoszt van a belső hálózaton és
+       10 szabad cím van
+   - *Port Address Translation (PAT)*:
+     - Több-egy leképezés
+     - Portszámokat használ az egyedi azonosításhoz
+     - Minden belső címhez más portszámot rendel
+     - A portszámokat igyekszik megőrizni
+     - Ha két forrás packet portszáma ugyanaz, akkor a későbbit eggyel
+       megnöveli
+     - Ha a portszámok is kifogytak, akkor egy új globális címet
+       választ
+     - Ha nincs 4. layer portszám, akkor azt PAT kölümböző módokon
+       kezeli (pl. ICMPv4 Query ID)
+
+** Port forwarding
+   - A router a bejövő csomagokat a portszám alapján továbbküldi egy
+     privát címre
+   - Akkor jó, ha kívülről érkeznek kérések, vagyis szerverek vannak a
+     privát hálózaton
+   - Ha pl. webszerver működik a privát hálózaton, akkor a szerver
+     ip-címként a külső WAN címet kell megadni
+   - A privát portszám lehet más mint a publikus
+
+** NAT64
+   - Átjárás IPv4 és IPv6 hálózatok között
+   - Ideális esetben minden hálózatnak IPv6-osnak kellene lennie, a
+     NAT64 az átmenetet segíti
+   - Egyéb átmeneti megoldások:
+     - *Dual-stack*: IPv4 és IPv6 protokoll stack együtt fut az
+       eszközökön
+     - *Tunneling*: IPv6 packetek IPv4 packetekbe ágyazása
+
+* Eszközfelismerés
+
+** Cisco Discovery Protocol (CDP)
+   - Cisco eszközök egymás között
+   - Információ szomszédos eszközökről
+   - Hasznos, ha nincsen meg a dokumentáció a topológiáról
+   - Egy üzenet tartalma:
+     - Eszköz típus
+     - Eszköznév
+     - Interfészek száma és típusa
+
+** Link Layer Discovery Protocoll (LLDP)
+   - Gyártófüggetlen
+   - Nem ad információt az interfészek számáról
+
+* Network Time Protocol (NTP)
+  - Manuálisan vagy NTP segítségével lehet beállítani az időt
+  - Egy NTP szerver idejével szinkronizálja az eszközöket
+  - Egy szerver lehet publikus vagy privát
+  - 123-as UPD porton keresztül
+  - Hierarchiába rendezhetőek
+    - Egy szint a hierarchiában a *startum*
+    - Minden stratum a hopszám szerint növekszik
+    - 0-ás stratum a legpontosabb
+    - 1-es stratum az első szerver, amely a standard időt adja
+    - 2-es és további stratumok kliensek és szerverek is lehetnek
+      magasabb startumok számára
+    - Max. 15 stratum lehet
+    - Ha egy eszköz stratuma 16, akkor nincs szinkronban
+    - Egy stratum szinten lévő eszközök egymást verifikálhatják
+
+* Syslog
+  - Rendszerüzenetek küldése egy központi szerverre
+  - 514-es UDP porton keresztül
+  - Syslog üzenet célok:
+    - Logging buffer
+    - Konzol
+    - Terminál
+    - Szerver
+  - Az adminisztrátor választhatja meg az üzenetek célját
+  - Üzenetek szintjei:
+    | Név           | Szint | Magyarázat                     |
+    |---------------+-------+--------------------------------|
+    | Emergency     |     0 | A rendszer használhatatlan     |
+    | Alert         |     1 | Azonnali beavatkozás szükséges |
+    | Critical      |     2 | Kritikus kondíció              |
+    | Error         |     3 | Error kondíció                 |
+    | Warning       |     4 | Figyelmeztető kondíció         |
+    | Notification  |     5 | Normális, de jeletős kondíció  |
+    | Informational |     6 | Információs üzenet             |
+    | Debugging     |     7 | Debugging üzenet               |
+    - 0-4 szint: hardveres vagy szoftveres hiba
+    - 5-ös szint: normális, de jelentős üzenetek, pl. interfészek
+      engedélyezése/tiltása
+    - 6-os szint: csak információ, pl. a bootolásnál megjelenő
+      információk
+    - 7-es szint: a ~debug~ parancsok hatására generált üzenetek
+  - Üzenetek formátuma:
+    | Mező        | Magyarázat                                                                                         |
+    |-------------+----------------------------------------------------------------------------------------------------|
+    | Seq no      | Csak akkor jelenik meg, ha be van kapcsolva a ~service sequence-numbers~                           |
+    | Timestamp   | Csak akkor jelenik meg, ha be van kapcsolva a ~sevice timestamps log datetime~                     |
+    | Facility    | Egy rész, amihez az üzenet tartozik. Pl. IP, OSPF, SYS (operációs rendszer), IPsec, IF (interfész) |
+    | Severity    | Az üzenet szintje                                                                                  |
+    | MNEMONIC    | Az üzenet maga                                                                                     |
+    | Description | Részletes leírás                                                                                   |

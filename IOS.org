@@ -429,3 +429,205 @@ interface <név>
 ipv6 dhcp relay destination <ipv6-cím>
 end
 #+END_SRC
+
+* NAT
+
+** Statikus NAT
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ip nat inside source static <local ip> <global ip> # 'no' kulcsszóval lehet letiltani
+# Belső vagy külső interfész megadása
+interface <interfész>
+ip nat [inside | outside]
+exit
+#+END_SRC
+
+** Dinamikus NAT
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+# Pool megadása
+ip nat pool <pool név> <első ip> <utolsó ip> {netmask <maszk> | prefix-length <prefix>}
+# ACL megadása, ami csak a fordítandó címeket tartalmazza
+access-list <ACL szám> permit <forrás ip> [<wildcard>]
+# ACL hozzákötése egy pool-hoz
+ip nat inside source list <ACL szám> pool <pool név>
+interface <interfész>
+ip nat [inside | outside]
+#+END_SRC
+Minden dinamikus bejegyzés 24 óra után törlődik. Felülírni
+a global config mode-ban az alábbi paranccsal lehet.
+#+BEGIN_SRC sh
+ip nat translation timeout <másodpercek>
+#+END_SRC
+Törölni pedig ezzel.
+#+BEGIN_SRC sh
+clear ip nat translation * # Mindent töröl
+clear ip nat translations inside <globális ip> <lokális ip> [outside <lokális ip> <globális ip>]
+#+END_SRC
+
+** PAT
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ip nat pool <pool név> <első ip> <utolsó ip> {netmask <maszk> | prefix-length <prefix>}
+# ACL megadása, ami csak a fordítandó címeket tartalmazza
+access-list <ACL szám> premit <forrás ip> [<wildcard>]
+# ACL hozzákötése egy pool-hoz
+ip nat inside source list <ACL szám> pool <pool név> overload
+# ACL hozzákötése egy ip-címhez
+ip nat inside source list <ACL szám> interface <külső interfész> overload
+interface <interfész>
+ip nat [inside | outside]
+#+END_SRC
+Ugyanaz, mint a dinamikus NAT-nál, csak itt szerepel az
+overload kulcsszó a NAT létrehozásánál
+
+** Port forwarding
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ip nat inside source static {tcp | udp} <lokális ip> <lokális port> <globális ip> <globális port> [extendable]
+#+END_SRC
+Az extendable kulcsszóval több portot is be lehet állítani
+
+** Verifikálás
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show ip nat translations [verbose]
+show ip nat statistics
+# Törlés
+clear ip nat statistics
+#+END_SRC
+
+** NATolt csomagok megjelenítése
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+debug ip nat [detailed]
+#+END_SRC
+
+* CDP
+
+** Engedélyezés és tiltás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+# Globálisan
+[no] cdp run
+# Egy interfészre
+interface <interfész>
+[no] cdp enable
+exit
+#+END_SRC
+
+** Információ
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show cdp
+show cdp neighbors [detail]
+show cdp interface    # Mely interfészeken van engedélyezve
+#+END_SRC
+
+* LLDP
+
+** Engedélyezés/tiltás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+# Globális
+[no] lldp run
+# Lokális
+interface <interfész>
+[no] lldp transmit
+[no] lldp receive
+#+END_SRC
+
+** Információ
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show cdp neighbors [detail]
+#+END_SRC
+Capacity oszlopban a B Bridge, ami switchet jelent
+
+* NTP
+
+** Manuális beállítás
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+clock set <óra:perc:másodperc> <hónap nap év>
+#+END_SRC
+
+** NTP szerver beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ntp server <ip-cím>
+end
+#+END_SRC
+
+** Verifikálás
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show clock detail
+show ntp associations
+show ntp status
+#+END_SRC
+
+* Logging (Syslog)
+
+** Engedélyezés
+Global config mode-ban kell kiadni
+#+BEGIN_SRC sh
+logging <syslog szerver cím>
+logging trap <level> # level vagy az annál alacsonyabb szintű üzenetek lesznek elküldve a syslog szervernek
+logging source-interface <interfész> # Ennek az interfésznek az ip-címe kerül a syslog üzenetbe függetlenül attól, hogy melyik interfészen ment ki
+#+END_SRC
+
+** Verifikálás
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show logging
+#+END_SRC
+Ez is pipeolható, ld. [[*Bejegyz%C3%A9sek verifik%C3%A1l%C3%A1sa][Bejegyzések verifikálása]]
+
+* Fájlrendszerek
+
+** Fájlrendszerek megjelenítése
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show file systems
+dir                 # Olyan, mint linuxon az ls
+cd <könyvtár vagy fájlrendszer>
+#+END_SRC
+A tftp, flash és nvram fájlrendszerek az érdekesek
+
+** Konfiguráció elmentése/visszaállítása tftp-vel
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+copy running-config tftp
+# Itt kérdezni fogja a szerver címét és a fájl nevét
+copy tftp running-config
+# Cím + fájlnév megadása
+#+END_SRC
+Ugyanez elvégezhető USB-s eszközzel. Ugyanez elvégezhető az IOS operációs rendszerrel is
+
+** Jelszó visszaállítás
+Konzolon keresztül a bootolás közben egy break szekvenciát kell beiktatni (putty-ban Ctrl-Break)
+így kerülhetünk ROMMON mode-ba
+#+BEGIN_SRC sh
+confreg 0x2142 # Bootolásnál nem veszi figyelembe a startup-configot
+reset          # Rebootol
+#+END_SRC
+A rebootolás után Privileged EXEC mode-ban
+#+BEGIN_SRC sh
+copy startup-config running-config
+conf t
+# Jelszavak beállítása újra
+config-register 0x2102
+end
+copy running-config startup-config
+reload
+#+END_SRC
+
+** Új rendszerkép betöltése
+Global config mode-ban kell kiadni
+#+BEGIN_SRC sh
+boot system <fájlrendszer>://<bináris állomány>
+exit
+copy runnning-config startup-config
+reload
+#+END_SRC
