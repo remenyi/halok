@@ -82,7 +82,7 @@
       | Internal BGP       |                     200 |
 
 *** Routing tábla
-    - Bejegyzések forrása:
+**** Bejegyzések forrása:
 
       | Betűjel | Jelentés                                      |
       |---------+-----------------------------------------------|
@@ -91,8 +91,9 @@
       | S       | Statikus út egy távoli hálózat felé           |
       | D       | Egy másik routertől tanult, EIGRP protokollal |
       | O       | Egy másik routertől tanult, OSPF protokollal  |
+      | R       | Egy másik routertől tanult, RIP protokollal   |
       
-    - Egy távoli hálózat bejegyzésének részei:
+**** Egy távoli hálózat bejegyzésének részei:
 
       | <1> | <2> | [<3>/<4>] | via | <5> | <6> | <7> |
 
@@ -104,7 +105,7 @@
       - 6: mennyi idő telt el az út megtanulása óta
       - 7: az interfész amelyre továbbít
     
-    - Egy közvetlenül kapcsolódó hálózat bejegyzésének részei:
+**** Egy közvetlenül kapcsolódó hálózat bejegyzésének részei:
 
       | <1> | <2> is directly connected | <3> |
 
@@ -114,6 +115,42 @@
 	
       - IOS 15 előtt az =L= bejegyzések nem kerültek kiírásra az IPv4
         táblában, de az IPv6 táblában mindig
+
+**** Hierarchia
+      - *Ultimate route*: 
+        - Aminek next-hop ip-cím vagy interfész van megadva 
+        - Ilyenek a közvetlenül kapcsolódó hálózatok (C), a local route-ok (L) és a
+          a dinamikus route-ok (D, O, R)
+      - *Level 1 route*:
+        - Minden olyan útvonal, ahol a maszk kisebb vagy egyenlő a
+          célhálózat csoportos maszkjával (A-\8, B-\16, C-\24)
+        - Ilyen a
+          - *Default route*: 0.0.0.0/0-ás route
+          - *Network route*: a maszk megegyezik a célhálózat csoportos maszkjával
+          - *Supernet route*: a maszk kisebbb a célhálózat csoportos maszkjánál
+        - Források:
+          - Közvetlenül kapcsolódó hálózat
+          - Statikus route
+          - Dinamikus route
+      - *Level 1 parent route*:
+        - Egy olyan hálózat, ami több más hálózatra van osztva
+        - Ennek a hálózatnak a maszkja is osztályokra van osztva
+      - *Level 2 child route*:
+        - Level 1 parent route gyerekei
+        - A forrás ugyanaz, mint a level 1 route-nál
+        - Egyben ultimate route-ok is
+      - IPv6-os táblában nincsen hierarchia, minden level 1 ultimate route,
+        mivel az IPv6 classless
+**** Keresés
+     - Először megnézi a level 1 route-okban a legjobb találatot
+       - Ha van ultimate route, akkor továbbítja
+       - Ha parent route-ot talált, akkor
+         - Ha level 2 child route-ot talált, akkor továbbítja
+         - Ha nincs találat, akkor
+           - Tovább keres a level 1 supernet route-okban, beleértve a 
+             default route-ot is
+     - Balról számítva a legtöbb megegyező bit-es útvonalat választja
+     - Az útvonal maszkja határozza meg, hogy hány bitnek kell megegyeznie
 
 *** Statikus bejegyzés
     - fajtái:
@@ -180,7 +217,32 @@
 *** Statikus hosztok megadása
     - 32 vagy 128 bites maszkkal
 
-** TODO Dinamikus routing
+** Dinamikus routing
+
+*** Routing protokollok
+    - RIP(v2): kis hálózatokra
+    - OSPF, IS-IS: nagyobb hálózatokra
+    - IGRP, EIGRP: ciscos, nagyobb hálózatokra
+    - BGP: ISPk között
+
+*** Routing protokollok összetétele
+    - Adatstruktúrák: a RAM-ban tárolja el a szükséges adatokat
+    - Üzenetek: ezek segítségével fedezi fel a szomszédos routereket
+      és cserél információt a hálózatokról
+    - Algoritmusok: segítségével választja ki a legrövidebb utat
+
+*** RIP
+    - Passzív interfész
+      - Nem küld update üzeneteket ezen az interfészen
+      - Más interfészeken viszont hirdeti az interfészhez tartozó 
+        hálózatot
+      - LAN-oknál használják
+    - Verziók
+      - Alapértelmezetten a kimenő üzenetek v1-ek
+      - Alapértelmezetten a bejövő üzenetek lehetnek v1-ek és v2-k,
+        a v2-es mezőket levágja
+    - Summary Static Route alapértelmezve van
+    - Default Static Route állítható be
 
 ** Switchek
 
