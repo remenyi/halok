@@ -434,7 +434,47 @@
     - Ha a biztonság be van kapcsolva, akkor max 1 darab biztonságos
       MAC-cím lehet shutdown üzemmódban, és a ragadós címtanulás ki van
       kapcsolva
-* TODO Vlan
+* Vlan
+
+** Definíció
+   - Logikai hálózatok
+   - Egy fizikai hálózaton osztozkodnak
+   - Minden switch port hozzárendelhető egy ilyen hálózathoz
+   - A broadcast, multicast és unicast csomagok a virtuális hálózatnak
+     megfelelően lesznek továbbítva
+
+** Előnyök
+   - Leszűkíti a layer 2-es broadcast domaint
+   - Csoportosíthatóak vele szervezeti egységek
+   - Nem kell drága eszközökre költeni
+
+** Típusok
+   - *DATA Vlan*: minden adat, ami nem hang vagy management
+   - *Default Vlan*: minden switch port alap esetben ehhez tartozik, száma 1
+   - *Native Vlan*:
+     - 802.1Q trunk porthoz van rendelve
+     - *Trunk port*:
+       - Olyan switch portok, amelyekhez több Vlan tartozik
+       - Támogatja a nem Vlan-ból jövő csomagokat (*untagged traffic*) is
+       - *Tagged traffic*: 4 bájtos Vlan azonosító van az ethernet frame-ben
+       - Untagged traffic alap esetben a Vlan 1-re lesz irányítva
+     - Megőrzi a kompatibilitást az untagged trafic-al
+   - *Management Vlan*:
+     - Úgy van konfigurálva, hogy menedzselni lehessen a switchet rajta keresztül
+     - Alapból a Vlan 1
+     - Újabb IOS verziókban (15.x) több is lehet
+   - *Voice Vlan*:
+     - VoIP forgalomhoz
+     - Követelmények:
+       - Stabil sávszélesség
+       - Magasabb prioritás a többi csomaghoz képest
+       - Zsúfolt részek kikerülése
+       - Kisebb, mint 150 ms késleltetés
+
+** Inter-vlan routing
+   - Legacy inter-vlan routing: a hálózatok címe külön portokhoz vannak kötve
+   - Router-on-a-Stick: a hálózatok címe egy porthoz van kötve
+
 * Access Control Lists (ACLs)
 ** Feladatai
 - Adatforgalom szűrése (pl. videó, telnet, stb...)

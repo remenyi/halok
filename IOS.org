@@ -428,6 +428,68 @@ no shutdown
 end
 #+END_SRC
 
+* Vlan
+
+** Vlan létrehozása/eltávolítása
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+[no] vlan <vlan szám>
+# Vlan mode-ba kerülünk
+name <név>
+end
+#+END_SRC
+
+** Vlan hozzárendelése/eltávolítása egy portról
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfész>
+switchport mode access
+mls qos trust cos # Az előző parancs helyett, ha VoIP-et akarunk
+switchport mode access vlan <vlan szám>
+no switchport access vlan
+end
+#+END_SRC
+
+** Vlan verifikálás
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show vlan [name <név>]
+show vlan summary
+show interfaces vlan <vlan szám>
+#+END_SRC
+
+** Trönkölt interfész beállítás
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfész>
+switchport mode trunk
+switchport trunk native vlan <natív vlan szám>
+swichport trunk allowed vlan <engedélyezett vlan szám...>
+end
+#+END_SRC
+
+** Trönkök törlése interfészről
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfész>
+no switchport trunk allowed vlan
+no switchport trunk native vlan
+end
+#+END_SRC
+
+** Router-on-a-Stick konfiguráció
+
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfész>.<vlan szám>
+# Alinterfész mode-ba kerülünk
+encapsulation dot1q <vlan szám>
+ip address <ip-cím> <maszk>
+# Ugyanez a többi alinterfészre
+...
+interface <interfész>
+no shutdown
+#+END_SRC
 
 * DHCPv6
 ** Stateless server beállítás
