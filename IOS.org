@@ -280,15 +280,68 @@ ipv6 route ::/0 {next-hop-ipv6 | exit-interface} #alapértelmezett útvonal ipv6
 Végére tehető az adminisztratív távolság, ha Floating Static Route-ot
 konfigurálunk
 
-* Tűzfalak
-** ACL létrehozása, törlése és megjelenítése
+* RIPv1
+
+** RIP engedélyezése egy hálózaton
+Global congig mode-ban kell lenni
+#+BEGIN_SRC sh
+routing rip
+# router config mode-ba kerülünk
+network <hálózat ip-cím>
+#+END_SRC
+Fogad RIP üzeneteket a hálózathoz tartozó interfészeken
+és 30 másodpercenként küld update üzeneteket
+
+** RIP verifikálása
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show ip protocols
+show ip route | begin Gateway
+#+END_SRC
+
+** Verzió beállítása
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+router rip
+version 2
+#+END_SRC
+
+** Summary Static Route letiltása
 Global config mode-ban kell lenni
 #+BEGIN_SRC sh
-access-list <0-99 | 1300-1999> {deny | premit | remark} <forrás ip> [<forrás wildcard>] [log]
-no access-list <0-99 | 1300-1999>
-exit
+router rip
+no auto-summary
+end
 #+END_SRC
-Minden ACL hozzá van rendelve egy 0-99 vagy 1300-1999 közötti számhoz.
+
+** Passzív interfész beállítása 
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+router rip
+passive-interface <interfész>
+end
+#+END_SRC
+Letiltja az üzenetek küldését, viszont hirdeti az interfészhez 
+tartozó hálózatot a többi interfészen
+
+** Default static route beállítása
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ip route 0.0.0.0 0.0.0.0 <next-hop-ip | exit-interfész>
+router rip
+default-information originate
+end
+#+END_SRC
+
+* Tűzfalak
+** ACL létrehozása, törlése és megjelenítése
+ Global config mode-ban kell lenni
+ #+BEGIN_SRC sh
+ access-list <0-99 | 1300-1999> {deny | premit | remark} <forrás ip> [<forrás wildcard>] [log]
+ no access-list <0-99 | 1300-1999>
+ exit
+ #+END_SRC
+ Minden ACL hozzá van rendelve egy 0-99 vagy 1300-1999 közötti számhoz.
 
 ** ACL hozzáadása és eltávolítása interfészről
 Global config mode-ban kell lenni
