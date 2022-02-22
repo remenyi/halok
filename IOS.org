@@ -439,23 +439,36 @@ name <név>
 end
 #+END_SRC
 
+A törlésnél érdemes odafigyelni, hogy a vlan ne legyen hozzárendelve egy porthoz sem.
+
+A vlan-ok a vlan.dat fájlban találhatóak, nem a running-configban. A `delete flash:vlan.dat`
+paranccsal lehet kitörölni.
+
 ** Vlan hozzárendelése/eltávolítása egy portról
 Global config mode-ban kell lenni
 #+BEGIN_SRC sh
 interface <interfész>
 switchport mode access
-mls qos trust cos # Az előző parancs helyett, ha VoIP-et akarunk
-switchport mode access vlan <vlan szám>
-no switchport access vlan
+switchport access vlan <vlan-id>
+# Ha VoIP-et is akarunk: 
+mls qos trust cos 
+switchport voice vlan 150
 end
 #+END_SRC
+
+Ha el lett rontva a vlan-id hozzárendelés, elég csak a ~switchport access vlan <vlan-id>~
+parancsot kiadni a megfelelő interfészen.
+
+Törlésnél a ~no switchport access vlan~ parancsot kell kiadni.
 
 ** Vlan verifikálás
 Privileged EXEC mode-ban kell lenni
 #+BEGIN_SRC sh
-show vlan [name <név>]
+show vlan [name <név> | id <VID>]
+show vlan brief
 show vlan summary
-show interfaces vlan <vlan szám>
+show interfaces vlan <vlan-id>
+show interface <interfész> switchport
 #+END_SRC
 
 ** Trönkölt interfész beállítás
@@ -463,33 +476,66 @@ Global config mode-ban kell lenni
 #+BEGIN_SRC sh
 interface <interfész>
 switchport mode trunk
-switchport trunk native vlan <natív vlan szám>
-swichport trunk allowed vlan <engedélyezett vlan szám...>
+switchport trunk native vlan <natív vlan-id>
+swichport trunk allowed vlan <engedélyezett vlan-id lista>
+# itt egyszerre kell megadni, nem lehet egyenként
 end
 #+END_SRC
 
-** Trönkök törlése interfészről
+** Trönkölt interfészek verifikálása
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show interface <interfész> switchport
+show interface trunk
+#+END_SRC
+
+** DTP(Dynamic Trunking Protocol) beállítás
 Global config mode-ban kell lenni
 #+BEGIN_SRC sh
 interface <interfész>
-no switchport trunk allowed vlan
-no switchport trunk native vlan
-end
+# Kikapcsolás
+swithcport nonegotiate
+# Visszakapcsolás (ez az alapértelmezett)
+switchport mode dynamic auto
 #+END_SRC
 
-** Router-on-a-Stick konfiguráció
+DTP switchport mode-ok:
+  - ~access~: mindenképp access mode-ba lesz állítva
+  - ~trunk~: mindenképpen trunking mode-ba lesz állítva
+  - ~dynamic auto~:
+    - trunk mode-ban lesz, ha a szomszédja ~dynamic desirable~ vagy ~trunk~
+    - access mode-ban lesz, ha a szomszédja ~dynamic auto~ vagy ~access~
+    - ez az alapértelmezett
+  - ~dynamic desirable~:
+    - trunk mode-ban lesz, ha a szomszédja ~dynamic desirable~, ~dynamic auto~ vagy ~trunk~
+    - access mode-ban lesz, ha a szomszédja ~access~
 
+** DTP verifikáció
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show dtp interface <interfész>
+#+END_SRC
+
+** Router-on-a-Stick inter-vlan routing
 Global config mode-ban kell lenni
 #+BEGIN_SRC sh
-interface <interfész>.<vlan szám>
+interface <interfész>.<vlan-id>
 # Alinterfész mode-ba kerülünk
-encapsulation dot1q <vlan szám>
+encapsulation dot1q <vlan-id>
 ip address <ip-cím> <maszk>
 # Ugyanez a többi alinterfészre
 ...
 interface <interfész>
 no shutdown
 #+END_SRC
+
+** Layer 3 switch inter-vlan routing
+Fel kell konfigurálni a switch megfelelő portjait a megfelelő vlan-okkal, majd a
+vlan interfészekre (SVI - Switch Virtual Interface) kell megadni a default-gateway-t.
+Ezután engedélyezni kell az ~ip routing~-ot.
+
+Ha egy másik layer 3-as ezközzel kötjük össze a switch-et, akkor az eszköz felé
+menő porton ~no switchport~ parancsot kell kiadni.
 
 * DHCPv6
 ** Stateless server beállítás
