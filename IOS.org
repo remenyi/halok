@@ -792,3 +792,25 @@ exit
 copy runnning-config startup-config
 reload
 #+END_SRC
+
+* EtherChannel
+
+** LACP beállítás
+Global config módban kell kiadni.
+#+BEGIN_SRC sh
+interface range <interfésznév-interfésznév>
+channel-group <etherchannel sorszáma> mode [active|passive|on]
+exit
+#+END_SRC
+
+Ezután a channel group sorszámát is lehet használni kiválasztáshoz:
+~interface port-channel <etherchannel sorszáma>~
+
+** LACP verifikálás
+Privileged EXEC módban kell kiadni.
+#+BEGIN_SRC sh
+show interfaces port-channel <etherchannel sorszám>
+show etherchannel summary
+show etherchannel port-channel
+show interfaces <interfésznév> etherchannel
+#+END_SRC
