@@ -712,3 +712,29 @@
     - Hello Timer: BPDU-k között eltelt idő (alapértelmezetten 2mp, 1-10 között állítható)
     - Forward Delay Timer: a hallgatózási és tanulási fázis időszaka (alapértelmezetten 15mp, 4-30 között állítható)
     - Max Age Timer: maximális idő, ami alatt a switch megpróbálja megváltoztatni a topológiát (alapértelmezetten 20mp, 6-40 között állítható)
+
+* EtherChannel
+  - Portokat aggregálja
+  - Előnyei:
+    - Konfiguráció egy etherchannellen, több port helyett
+    - Egyszerűen lehet egy link kapacitását növelni plusz egy port hozzávételével
+    - Terheléselosztást végez
+    - Redundanciát biztosít
+  - Limitációk:
+    - Különböző interfésztípusokat nem lehet egy etherchannelbe rakni
+    - 6 vagy 8 portot lehet egy etherchannelbe rakni
+    - Mindkét oldalon meg kell hogy egyezzen a portok konfigurációja (duplex, vlan)
+  - PAgP
+    - Cisco proprietary protokoll
+    - Biztosítja, hogy konzisztens beállítások legyenek minden porton
+    - Interfész módok:
+      - On: az interfész nem vesz részt a PAgP-ben, de etherchannelbe kerül
+      - PAgP desirable: PAgP kialakítását kezdeményezi
+      - PAgP auto: PAgP kialakítását várja
+  - LACP:
+    - IEEE 802.3ad-ben specifikált
+    - Backup linkek is definiálhatók, amelyek csatlakozni tudnak az etherchannelhez
+    - Interfész módok:
+      - On: hasonló a PAgP-hez
+      - LACP active: hasonló a PAgP-hez
+      - LACP passive: hasonló a PAgP-hez
