@@ -666,3 +666,49 @@
     | Severity    | Az üzenet szintje                                                                                  |
     | MNEMONIC    | Az üzenet maga                                                                                     |
     | Description | Részletes leírás                                                                                   |
+
+* STP
+  - Hurkok kialakulásának megakadályozása Layer 2 ethernet hálózatokban
+  - Hurkok alakulhatnak ki unkown-unicast, multicast vagy broadcast üzenetküldésnél
+  - Algoritmus:
+    - A switchek kiválasztanak egy /root bridge/ switchet, amelyhez megállapítják a legköltséghatékonyabb utat
+    - Az utakban nem szereplő linkeken nem vezet át forgalmat
+    - így nem alakul ki hurok a hálózatban
+    - Vlan-ok esetében vlanonként lesz kiválasztva root bridge
+  - Root bridge kiválasztás:
+    - Bridge Protocol Data Units (BPDU):
+      - Ezzel osztanak meg információt egymással a switchek
+      - Tartalmaz egy Bridge ID-t (BID), amely 3 részből áll:
+        - Bridge priority: alapértelmezetten 32769
+        - Extended System ID: a vlan-t jelöli
+        - MAC address: a switch MAC-címe
+    - Minden switch a bekapcsolás után 2mp-ként BPDU üzeneteket küld
+    - A legkissebb BID lesz a root bridge
+    - Eleinte minden switch magát jelöli ki root bridge-nek, de utána a többi BPDU üzenet alapján a legkisebb BID-el rendelkező switchet választja
+    - A bridge priority mezővel lehet beállítani a root bridge-t
+  - Költségek meghatározása
+    - A BPDU minden kimenő üzenethez hozzáadja a kimeneti port költségét
+    - A költségek alapértelmezetten a 802.1D szabvány szerint vannak meghatározva
+    | Sebesség | 802.1D | 802.1w    |
+    |----------+--------+-----------|
+    | 10 Gbps  | 2      | 2,000     |
+    | 1 Gbps   | 4      | 20,000    |
+    | 100 Mbps | 19     | 200,000   |
+    | 10 Mbps  | 100    | 2,000,000 |
+  - Portok típusa:
+    - Root port: a root bridge-hez legközelebb lévő port
+    - Designated port:
+      - Minden root bridge port
+      - A root portok párja a másik switchen
+      - Ha egy link egyik portja sem root port, akkor a kisebb költségű lesz
+    - Alternate(blocked) port:
+      - Minden, ami nem az előző kettő
+      - Blokkolva van rajta a forgalom
+  - Portválasztás egyenlő költségű utak esetén
+    1. A kisebb BID-el rendelkező switch felé eső portot választja
+    2. A beérkező port priority alapján választ (az alacsonyabbat preferálja)
+    3. A küldő port ID értékének alapján választ (az alacsonyabbat preferálja)
+  - Időzítők:
+    - Hello Timer: BPDU-k között eltelt idő (alapértelmezetten 2mp, 1-10 között állítható)
+    - Forward Delay Timer: a hallgatózási és tanulási fázis időszaka (alapértelmezetten 15mp, 4-30 között állítható)
+    - Max Age Timer: maximális idő, ami alatt a switch megpróbálja megváltoztatni a topológiát (alapértelmezetten 20mp, 6-40 között állítható)
