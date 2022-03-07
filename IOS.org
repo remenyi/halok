@@ -393,6 +393,8 @@ access-list <ACL-szám> deny any
 ** DHCP beállítás
 Global config mode-ban kell lenni
 #+BEGIN_SRC sh
+# IP-címek kihagyása
+ip dhcp excluded-address <legkisebb IP-cím> <legnagyobb IP-cím>
 ip dhcp pool <név>
 # dhcp pool mode-ba kerülünk
 network <hálózat ip> <hálózat maszk vagy \prefix>
@@ -401,6 +403,14 @@ dns-server <dns ip>
 domain-name <név>
 lease {<napok> [órák] [percek] | infinite}
 netbios-name-server <ip>
+#+END_SRC
+
+** DHCP szervíz leállítása
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+no service dhcp
+# újraengedélyezés
+service dhcp
 #+END_SRC
 
 ** DHCP verifikálás
@@ -426,6 +436,12 @@ interface <interfész>
 ip address dhcp
 no shutdown
 end
+#+END_SRC
+
+** Windows kliens beállítás
+#+BEGIN_SRC sh
+ipconfig /release
+ipconfig /renew
 #+END_SRC
 
 * Vlan
