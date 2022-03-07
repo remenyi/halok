@@ -524,7 +524,27 @@
 - A host bejegyzések vannak előbb, de nem feltétlenül a megadás
   sorrendjében (hatékonyság)
 - Az intervallum bejegyzések következnek utána, a megadás sorrendjében
-* TODO DHCP
+
+* DHCPv4
+
+** Egy IP-cím kérése
+  1. A kliens DHCPDISCOVER broadcast üzenetet küld a hálózatnak
+    - A forrás MAC-cím a kliens MAC-címe
+    - A célcímek broadcast címek
+  2. A szerver egy DHCPOFFER üzenettel válaszol
+    - Tartalmazza az IP-címet 
+    - A szerver egy ARP bejegyzést is tesz
+  3. A kliens egy DHCPREQUEST üzenettel leokézza
+    - A DHCPREQUEST üzenetet használja a bérlés megújítására
+    - Mivel több DHCP szerver is lehet a hálózaton, ezért broadcast üzenet
+  4. A szerver egy DHCPACK üzenettel nyugtázza a kérést
+    - Előtte egy pinggel ellenőrzi, hogy nem használja-e más kliens a címet
+    - A kliens is meggyőződik róla, hogy más nem használja a címet az ARP táblájában való kereséssel
+
+** Bérlés megújítása
+  1. A kliens DHCPREQUEST üzenetet küld a szervernek
+    - Még a bérleti idő lejárta előtt kell elküldeni, különben újra le kell foglalnia a címet
+  2. A szerver DCHPACK üzenettel nyugtázza a kérést
 
 * NAT
 
