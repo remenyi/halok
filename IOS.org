@@ -571,9 +571,11 @@ ipv6 nd other-config-flag
 ** Stateless DHCPv6 kliens beállítás
 Global config mode-ban kell lenni
 #+BEGIN_SRC sh
+ipv6 unicast-routing
 interface <név>
 ipv6 enable
 ipv6 address autoconfig
+end
 #+END_SRC
 
 ** Stateful server beállítás
@@ -589,6 +591,7 @@ exit
 interface <név>
 ipv6 dhcp server <pool név>
 ipv6 nd managed-config-flag
+ipv6 nd prefix default no-autoconfig
 #+END_SRC
 
 ** Stateful kliens beállítás
@@ -597,6 +600,14 @@ Global config mode-ban kell lenni
 interface <név>
 ipv6 enable
 ipv6 address dhcp
+#+END_SRC
+
+** Verifikáció
+Privileged EXEC mode-ban kell lenni
+#+BEGIN_SRC sh
+show ipv6 dhcp pool
+show ipv6 dhcp binding
+show ipv6 dhcp interface
 #+END_SRC
 
 ** Relay Agent beállítás
