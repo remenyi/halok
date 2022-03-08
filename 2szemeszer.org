@@ -546,6 +546,40 @@
     - Még a bérleti idő lejárta előtt kell elküldeni, különben újra le kell foglalnia a címet
   2. A szerver DCHPACK üzenettel nyugtázza a kérést
 
+* DHCPv6
+
+** Bevezetés
+  - LLA-t (Link-Local Address) automatikusan létrehoz a host
+  - GUA-t (GLobal Unicast Address) a DHCPv6 szervertől szerez a host
+  - A DHCPv6 szerver RA (Router Advertisement) üzenetekkel ad információt a hosztok számára
+  - 3 fajta módon szerezhet a GUA-nak címet:
+    1. SLAAC: a routertől kapott infók alapján konstruálja meg az IP-címét (A flag az RA-ban)
+    2. SLAAC + DHCP szerver: a szervertől plusz információkat is kaphat (A + O flag)
+    3. DHCPv6 szerver: a szervertől kapja az összes infót, kivéve  a default gateway-t (M flag)
+
+** SLAAC
+  - Nincs szükség DHCPv6 szerverre, egy router is tud küldeni RA üzeneteket
+  - Az unicast routing engedélyezés hatására minden IPv6-címmel rendelkező interfész küld RA-kat 200 mp-ként az FF02::1 (all IPv6 nodes) multicast címre
+  - Ha egy hoszt RA üzenetet akar a routertől, akkor RS (Router Solicitation) üzenetet küld a FF02::2 (all routers) multicast címre
+  - A router egy RA üzenettel válaszol a FF02::1 multicast címre
+  - Címgenerálás (alsó 64 bit):
+    - Random módon (pl. Win 10)
+    - EUI-64: a MAC-címet kettévágja, beleilleszti az FFFE értéket, majd a 7. bitet átbillenti
+  - DAD (Duplicate Address Dedection): NS (Neighbor Solicitation) üzeneteket küld, amelyenek 
+    a célcíme egy multicast üzenet, amely a cím hoszt részének az utolsó 24 bitjét tartalmazza.
+    Ha erre nem érkezik válasz, akkor nincs ütközés
+
+** DHCPv6 szerver
+  - IPv6-cím létrehozása:
+    1. A hoszt RS üzenetet küld a routereknek
+    2. A routerek RA üzenetekkel válaszolnak
+    3. A hoszt a kapott infók alapján a SOLICIT üzenetet küld a FF02::1:2 (DHCPv6 szerverek multicast) címre
+    4. A DHCPv6 szerverek ADVERTISE unicast üzenettel válaszolnak, hogy léteznek
+    5. Két eset lehetséges:
+      - Stateless mód: a kliens összerakja az RA alapján az IPv6-címét, majd további infókat kér a szervertől (INFORMATION-REQUEST)
+      - Stateful mód: a kliens egy REQUEST üzenettel lekéri az összes szükséges beállítást (kivéve a default gateway-t)
+    6. A szerver egy REPLY üzenettel válaszol, amiben benne vannak a kért beállítások
+
 * NAT
 
 ** A NAT
