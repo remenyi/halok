@@ -792,3 +792,33 @@
       - On: hasonló a PAgP-hez
       - LACP active: hasonló a PAgP-hez
       - LACP passive: hasonló a PAgP-hez
+
+* FHRP (First Hop Redundancy Protocol)
+  - Mechanizmust biztosít arra az esetre, ha egy default gateway router elfailel, akkor átvegye egy másik router a helyét
+  - Az IPv6-ot használó hosztok védve vannak, de a failover idő magas lesz az RA-któl függően
+  - A routerek egyetlen virtuális routerként jelennek meg, amelyek ugyanarról az IP- és MAC-címre fogadnak csomagokat
+  - A routerek közül mindig legalább kettő ki lesz választva, ami elvégzi a továbbítást
+  - Opciók:
+    - HSRP: Cisco proprietary, active és standby routerek vannak
+    - HSRP for IPV6
+    - VRRPv2: nyílt, kiválaszt egy mastert és backup routereket
+    - VRRPv3: jobban skálázódik
+    - GLBP: Cisco proprietary, load balancingot tesz lehetővé
+    - GLBP for IPv6
+    - IRDP: legacy
+  - HSRP (Hot Standby Router Protocol):
+    - Alapértelmezetten a legnagyobb IP-címmel rendelkező router lesz az active router
+    - A prioritásokat be lehet állítani:
+      - 0-tól 255-ig
+      - Alapértelmezetten 100
+    - Akkor is aktív marad egy router, ha nagyobb prioritású router csatlakozik a hálózathoz
+    - Ha HSRP preemption van engedélyezve a router egy interfészén, akkor új aktív router választást kezdeményezhet (ha nagyobb a prioritása)
+    - A routerek minden 3 másodpercben HSRP hello packeteket küldenek egymásnak (multicast)
+    - Ha a standby routerek nem kapnak HSRP hello üzenetet az active routertől 10 másodpercig, active routerré válnak
+    - Állapotok:
+      - Initial: interfész elérhetővé válik, vagy a konfig megváltozott
+      - Learn: nem kapott a többi routertől HSRP hello üzenetet, még nincs meg a virtuális IP-cím
+      - Listen: már megvan a virtuális IP-cím, de még nem döntöttel el, hogy active vagy standby
+      - Speak: már küld HSRP hello üzenetet a többi routernek, részt vesz az active és standby routerek kiválasztásában
+      - Standby: a router active router jelölt
+      - Active: a router active router
