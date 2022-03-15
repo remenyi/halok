@@ -409,6 +409,7 @@
         után jelentkeznek. Hosszú kábelek vagy rosszul konfigurált
         duplexitás lehet az oka
 *** Biztonság
+
     - Nem használt portok letiltása, az ~interface range <típus>
       <modul>/<első>-<utolsó>~ parancs megkönnyíti
     - Biztonságos MAC-cím(ek) számát lehet engedélyezni egy portra
@@ -434,6 +435,7 @@
     - Ha a biztonság be van kapcsolva, akkor max 1 darab biztonságos
       MAC-cím lehet shutdown üzemmódban, és a ragadós címtanulás ki van
       kapcsolva
+
 * Vlan
 
 ** Definíció
@@ -822,3 +824,168 @@
       - Speak: már küld HSRP hello üzenetet a többi routernek, részt vesz az active és standby routerek kiválasztásában
       - Standby: a router active router jelölt
       - Active: a router active router
+      
+* Biztonság
+  - Típusok:
+    - DDoS
+    - Adatszivárgás
+    - Malware
+  - Hálózati eszközök:
+    - VPN router
+    - NGFW: csomagellenőrzést végez
+    - NAC: AAA szolgáltatást nyújt
+    - Cisco ESA: kiszűri a phising emaileket
+    - Cisco WSA: kiszűri a kártékony url-eket
+  - Layer 2 támadások:
+    - MAC address table flooding:
+      - A MAC tábla mérete fix, egy támadó meg tudja tölteni a MAC táblát
+      - Ha tele a MAC tábla, a switch a VLAN-ban lévő összes portra továbbítja a csomagokat, amit a támadó lehallgathat
+      - A többi switchre is átszivároghat
+      - A macof programot használják a támadáshoz
+      - Port security beállítással lehet kivédeni, amely csak egy meghatározott számú MAC-címet tanul meg egy porton
+    - Vlan hopping:
+      - Egy másik vlanon lévő hosztra lehet forgalmat küldeni
+      - Az automatikus trunking módot használja, ami alapértelmezetten engedélyezve van
+    - Vlan double-tagging:
+      - Egy másik vlanon lévő hosztra lehet forgalmat küldeni
+      - A küldendő csomagot ellátja még egy vlan címkével, ami a trunk link natív vlan-ja
+      - Mivel natív vlan van a csomagon, ezért a trunk linken e nélkül fog átmenni a csomag
+      - A fogadó switch csak azt látja, hogy van vlan címke a csomagon, ezért továbbküldi a csomagot a megfelelő vlan-ra
+      - Csak akkor működik, ha a támadó egy trunk portot használ vagy olyat, amire natív vlan van konfigurálva
+      - Kivédhető, ha figyelünk, hogy trunk portot csak switchek között lehessen létrehozni (autotrunking legyen kikapcsolva), illetve natív vlan csak trunk portokra legyen konfigurálva
+    - DHCP starvation
+      - A támadó minden lefoglalható IP-címet lefoglal
+    - DHCP spoofing:
+      - A támadó egy hamis DHCP szervert helyez el a hálózatban
+      - A hamis DHCP szerver hamis gateway, DNS, IP-cím információkat ad a hosztoknak
+      - A kliens azt a DHCPOFFER üzenetet fogadja, amit előbb kap meg
+      - DHCP snoopinggal kivédhető
+    - ARP támadás:
+      - A hosztok kéretlen ARP üzeneteket broadcastolhatnak (gratious ARP)
+      - Egy támadó gratious ARP üzenetekkel default gateway-nek adhatja ki magát, ezzel MiM támadást tud végrehajtani
+      - DAI-val kivédhető
+    - Address spoofing:
+      - A támadó egy másik hoszt IP- vagy MAC-címét használja, ezzel átverve a switchet vagy a routert
+      - IPSG mechanizmussal kivédhető
+    - STP támadás:
+      - A támadó olyan BPDU-kat küld, amelyben nagyon alacsony bridge priority van, ezzel ő lesz a root bridge
+      - Így rajta keresztül megy minden forgalom
+      - PortFast beállítással a kliens interfészekre megnehezíthetjük a támadó dolgát (átugorja a listening és learning fázisokat a gyorsabb konvergencia érdekében)
+      - BPDU guard mechanizmussal kivédhető (lecsapja azokat a portokat, ahonnan BPDU-kat kap, de nem switch-el van összekötve)
+    - CDP felfedezés:
+      - A CDP üzenetek tartalmazzák az IOS verzióját a Cisco eszközöknek, amivel sérülékenységeket lehet megállapítani
+      - Kezelni a CDP letiltásával lehet: ~no cdp run~
+      - Vagy port szinten letiltani: ~no cdp enable~
+      - Hasonló dolgok vonatkoznak az LLDP-re is
+
+* WLAN
+
+- Típusok:
+  - WPAN: 6-9 méteres hatótáv, a 802.15 szabvány szerint (bluetooth) 
+  - WLAN: kb 9 méteres hatótáv, a 802.11 szabvány szerint (wifi)
+  - WMAN: licenszelt frekvenciákon egy városnyi hatótávval
+  - WWAN: még nagyobb földrajzi területet fed le (WiMAX)
+- Technológiák:
+  - Bluetooth: 
+    - Max 100 méteres hatótáv
+    - Bluetooth Low Energy (BLE): mesh topológiát is támogat
+    - Bluetooth Basic Rate/Enhanced Rate (BR/EDR): audio streamingre optimalizálva
+  - WiMAX: 50 km-es hatótáv, a DSL-el versenyzik
+  - Cellás telkohálózat: GSM mindenhol CDMA csak az USÁban
+  - Műholdas internet
+- IEEE 802.11 szabvány
+
+  | szabvány | frekvencia   | leírás |
+  |----------+--------------+----------------------------------------------------------------|
+  | 802.11   | 2.4 GHz      | 2 Mbps sebesség                                                |
+  | 802.11a  | 5 GHz        | 54 Mbps                                                        |
+  | 802.11b  | 2.4 GHz      | 11 Mbps                                                        |
+  | 802.11g  | 2.4 GHz      | 54 Mbps                                                        |
+  | 802.11n  | 2.4 és 5 GHz | 150-600 Mbps, MIMO                                             |
+  | 802.11ac | 5 GHz        | 450-1300 Mbps, MIMO                                            |
+  | 802.11ax | 2.4 GHz      | gyorsabb, hatékonyabb, wifi 6, 1 és 7 GHz-t is használni fogja |
+
+- AP típusok:
+  - Autonóm AP-k: az összeset manuálisan kell felkonfigurálni
+  - Controller AP-k: a hálózatban található WLAN Controllerrel (WLC)-vel kommunikálnak, és csak a WLC-t kell setupolni
+- Topológia összetétel:
+  - BSS (Basic Service Set):
+    - Egy AP hozza létre
+    - Egy AP által lefedett terület a BSA (Basic Service Area)
+    - Egy BSS-t az AP MAC-címe azonosít (BSSID)
+  - ESS (Extended Service Set):
+    - Több BSS-ből áll, amelyeket egy elosztó rendszer köt össze
+    - Egy ESS által lefedett terület a ESA (Extended Service Area)
+    - Egy ESS-t az SSID azonosít
+    - Roamingot tesz lehetővé
+- 802.11 frame összetevői:
+  - Frame control: megadja a protokoll verziót, a frame típust, a címtípust, energia infókat és biztonsági beállításokat
+  - Duration: mennyi idő fog eltelni a következő frame érkezéséig
+  - Ha a klienstől érkezik:
+    - Address 1 Receiver Address: AP MAC-címe
+    - Address 2 Transmitter Address: küldő MAC-címe
+    - Address 3 SA/DA/BSSID: a cél MAC-cím, ami vezetékes vagy vezetéknélküli eszköz is lehet
+  - Ha az AP-től érkezik:
+    - Address 1 Receiver Address: küldő MAC-címe
+    - Address 2 Transmitter Address: AP MAC-címe
+    - Address 3 SA/DA/BSSID: a vezetéknélküli eszköz cél MAC-címe
+    - Sequence Control: frame-k összeillesztéséhez kell
+    - Address 4: csak ad-hoc (p2p) módban kell
+  - Payload 
+  - FCS: ellenőrző kód
+- CSMA/CD (Carrier Sense Multiple Acces With Collision Avoidance):
+  - Half-duplex, azaz egyetlen kliens tud csak kommunikálni az osztott közeget használva
+  - Csomagküldés lépései:
+    1. Belehallgat a csatornába, hogy nem küld-e valaki éppen
+    2. Ha senki nem beszél, egy RTS üzenetet küld az AP-nek, hogy hozzáférést kérjen a hálózathoz
+    3. Az AP egy CTS üzenettel válaszol, amivel engedi a hozzáférést
+    4. A CTS üzenet vétele után elkezdi küldeni az adatokat, ha nem kapta meg, vár még
+    5. Az üzenet elküldése után az AP leokézza, ha a kliens nem kapott ACK-ot, újraküldi a csomagot
+- AP felfedezése:
+  - Passzív: az AP beacon frameket küld bizonyos időközönként
+  - Aktív: a kliens ismeri az SSID-t és minden csatornán boradcastol probe requesteket, amire az AP válaszol probe response-al
+- CAPWAP (Control and Provisioning of Wireless Access Points):
+  - AP-k és a WLC között forgalom menedzselésére létrehozott IEEE szabvány
+  - UDP 5246 (kontrol) és 5247-es (data) portokat használja IPv4 és IPv6 felett
+  - DTLS-t (Datagram Transport Layer Security) használ a títkosításra (alapértelmezetten csak a management forgalom van titkosítva!)
+  - AP MAC funkciók:
+    - Beacon és probe válaszok
+    - Packet ACK-olás és újraküldés
+    - Frame sorbarendezés
+    - MAC szintű titkosítás
+  - WLC MAC funkciók:
+    - Autentikáció
+    - Roamingoló kliensek AP-khez való asszociációinak kezelése
+    - Frame-k átalakítása más protokollokhoz
+    - 802.11-es forgalom átterelése kábelekkel összekötött hálózatra
+  - FlexConnect AP:
+    - Megoldás arra az esetre, ha a WLC más hálózaton helyezkedik el
+    - Módok:
+      - Connected: a WLC-t el tudja érni, és CAPWAP segítségével teremt vele kapcsolatot
+      - Standalone: a WLC elérhetetlen, az AP átvesz funkcókat tőle (authentikáció, switching)
+- Csatorna szaturáció mitigáció:
+  - DSSS (Direct-Sequence Spread Spectrum): a jelet egy szélesebb frekvenciatartományon keresztül viszi át
+  - FHSS (Frequency-Hopping Spread Spectrum): folyton változtatja a carrier frekvenciát
+  - OFDM (Orthogonal Frequency-Division Multiplexing): egy sávot több alvivőre oszt, ahol ortogonális frekvenciák vannak
+- Csatorna kiválasztása:
+  - 2.4-2.5 GHz-s sávban:
+    - 22 MHz-s csatornák, 5 MHz elcsúszással
+    - USÁban 11, Európában 13, Japánban 14 csatorna van
+    - Egyszerre 2-3 sáv nem interferál
+  - 5 GHz-s sávban:
+    - 24 db csatorna
+    - 20 MHz szélesek
+    - Kicsit egymásba lógnak, de ez nem gond
+- WLAN támadások:
+  - DoS: lehet szándékosan vagy véletlenül (főleg a 2.4-es sávban) zavarni a jelet
+  - Rogue APk: MITM támadást lehet végezni, a WLC Rogue AP policijával kivédhető
+- WLAN támadások kivédése:
+  - SSID cloaking: az AP nem küld beacon üzeneteket, a kliensek ismernie kell az SSID-t
+  - MAC-cím szűrés: csak megadott MAC-címmel rendelkező kliensek csatlakozhatnak az AP-hez
+  - Autentikációs módok:
+    - WEP: RC4 titkosítást használ, amit könnyen fel lehet törni
+    - WPA: TKIP titkosítást használ, minden egyes packetet külön kulccsal titkosítja
+    - WPA2: TKIP helyett AES-t használ, legnépszerűbb
+    - WPA3: még nem terjedt el
+    - Personal: egy előre megadott kulcs a jelszó
+    - Enterprise: egy autentikációs szervert használ

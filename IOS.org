@@ -256,16 +256,74 @@ login local
 #+SRC_END
 
 ** Port biztonság
+
 Global config mode-ban kell lenni
 #+BEGIN_SRC sh
 interface <interfész>
 switchport mode access
-switchport port-security [maximum <engedélyezett MAC-címek száma> | mac-address sticky]
+switchport port-security [maximum <engedélyezett MAC-címek száma> | mac-address <MAC-cím> | mac-address sticky ]
+switchport port-security aging [ static | time <idő> | type [absolute | inactivity] ]
+switchport port-security violation [ protect | restrict | shutdown ]
 #+END_SRC
 Verifikálni a következő parancsokkal lehet
 #+BEGIN_SRC sh
 show port-security interface <interfész>
 show port-security address   # Kiírja az összes biztonságos MAC-címet
+#+END_SRC
+
+Violation protect módban nem küld syslog üzenetet és nem emelkedik a violation counter. 
+Restrict protect módban nem kapcsolja le teljesen az interfészt, de emelkedik a violation counter és syslog üzenetet küld.
+
+** DHCP snooping
+
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ip dhcp snooping [vlanok listája]
+interface <interfész> # Az az interfész, amiben megbízunk
+ip dhcp snooping trust
+exit
+interface <interfész> # Az az interfész, amiben NEM bízunk meg
+ip dhcp snooping limit rate <csomag per perc>
+#+END_SRC
+
+** DAI (Dynamic ARP Inspection)
+
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+ip dhcp snooping
+ip dhcp snooping <vlanok listája>
+interface <interfész> # Az az interfész, amiben megbízunk
+ip dhcp snooping trust
+ip arp inspection trust
+exit
+ip arp inspection validate [ src-mac | dst-mac | ip ]
+#+END_SRC
+
+Szűrési beállítások:
+- src-mac: összehasonlítja a forrás MAC-címeket az ethernet headerben és az ARP bodyban
+- dst-mac: összehasonlítja a cél MAC-címeket az ethernet headerben és az ARP bodyban
+- ip: nem valid vagy multicast IP-címeket szűr
+
+** PortFast
+
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfész> # Az az interfész, amiben NEM bízunk meg
+switchport mode access
+spanning-tree portfast
+exit
+spanning-tree portfast default # Az összes porton PortFastot állít
+#+END_SRC
+
+** BPDU Guard
+
+Global config mode-ban kell lenni
+#+BEGIN_SRC sh
+interface <interfész> # Az az interfész, amiben NEM bízunk meg
+spanning-tree bpduguard enable
+exit
+spanning-tree portfast bpduguard default # Az összes porton BPDU guardot állít, ahol PortFast is van állítva
+errdisable recovery cause bpduguard # A BPDU guard által lecsapott portot újra elérhetővé teszi
 #+END_SRC
 
 * Routing
